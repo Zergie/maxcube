@@ -5,13 +5,27 @@ from pprint import pprint
 from io import BytesIO
 from collections import defaultdict
 
+from maxcube import bcd
+
+import datetime
 
 def handle_output_H(line):
-    serial, rf_address, firmware_version, *_ = line.decode().strip().split(',')
+    serial, rf_address, firmware_version, unknown, http_connection_id, duty_cycle, free_memory_slots, cube_date, cube_time, clock_set, unknown2  = line.decode().strip().split(',')
+
+    cube_date = datetime.date(2000 + int(cube_date[0:2], 16), int(cube_date[2:4], 16), int(cube_date[4:6], 16))
+    cube_time = datetime.time(int(cube_time[0:2], 16), int(cube_time[2:4], 16))
     return {
         'serial': serial,
         'rf_address': rf_address,
         'firmware_version': firmware_version,
+        '?1' : unknown,
+        'http_connection_id' : http_connection_id,
+    	'duty_cycle' : duty_cycle,
+		'free_memory_slots' : free_memory_slots,
+        'cube_date' : cube_date,
+        'cube_time' : cube_time,
+    	'clock_set' : clock_set,
+    	'?2' : unknown2
     }
 
 
@@ -21,9 +35,8 @@ def handle_output_M(line):
     _1, _2, encoded = line.strip().split(b',', 2)
     decoded = BytesIO(base64.decodebytes(encoded))
 
-    # Unknown bytes
-    data['?0'] = ord(decoded.read(1))
-    data['?1'] = ord(decoded.read(1))
+    data['magicbyte'] = ord(decoded.read(1)) # Meta Data Magic. Should always be 0x56
+    data['version'] = ord(decoded.read(1)) # Meta data version. Should always be 0x02
 
     # Rooms
     data['room_count'] = ord(decoded.read(1))
@@ -62,10 +75,12 @@ def handle_output_C(line):
     data['data_len'] = ord(decoded.read(1))
     data['rf_address'] = binascii.b2a_hex(decoded.read(3))
     data['type'] = ord(decoded.read(1))
-    data['?1'] = binascii.b2a_hex(decoded.read(3))
+    data['room_id'] = ord(decoded.read(1))
+    data['fw_version'] = ord(decoded.read(1))
+    data['test_result'] = ord(decoded.read(1))
     data['serial'] = decoded.read(10)
     if data['type'] == 2:
-        # VALVES
+        # RadiatorThermostat
         data['temperature_comfort'] = ord(decoded.read(1)) / 2
         data['temperature_eco'] = ord(decoded.read(1)) / 2
         data['temperature_setpoint_max'] = ord(decoded.read(1)) / 2
@@ -77,7 +92,15 @@ def handle_output_C(line):
         data['decalcification'] = decoded.read(1) # TODO
         data['valve_maximum'] = ord(decoded.read(1)) * (100 / 255)
         data['valve_offset'] = ord(decoded.read(1)) * (100 / 255)
-        data['program'] = decoded.read() # TODO
+        data['program'] = decoded.read(182) # TODO
+    elif data['type'] == 3:
+        # WallThermostat
+        data['temperature_comfort'] = ord(decoded.read(1)) / 2
+        data['temperature_eco'] = ord(decoded.read(1)) / 2
+        data['temperature_setpoint_max'] = ord(decoded.read(1)) / 2
+        data['temperature_setpoint_min'] = ord(decoded.read(1)) / 2
+        data['program'] = decoded.read(182) # TODO
+
     return data
 
 def handle_output_L(line):
