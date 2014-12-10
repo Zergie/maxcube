@@ -4,13 +4,12 @@ from maxcube import parsing
 from maxcube import output
 from maxcube import network
 from maxcube import objects
-from maxcube import discover
 
 
 def main():	
 	print("searching maxcube(s)..")
 
-	for tcp_addr, tcp_port in discover.scan()
+	for tcp_addr, tcp_port in network.discover_cubes(limit = 1):
 		raw_data = network.read_raw_data(tcp_addr, tcp_port)
 
 		print('')
