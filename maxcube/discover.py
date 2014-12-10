@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import socket
-import bcd
-
 
 def scan(limit=99):
 	HelloMessage =  bytes([0x65, 0x51, 0x33, 0x4d, 0x61, 0x78, 0x2a, 0x00, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x49]);
@@ -20,7 +18,7 @@ def scan(limit=99):
 					'serial' : data[8:18],
 					'unknown' : data[18:21],
 					'rf_address' : data[21:24],
-					'fw_version' : bcd.to_int(data[24:26])
+					'fw_version' : int(data[24:26])
 					}
 	            limit -= 1
 				break

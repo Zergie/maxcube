@@ -5,8 +5,6 @@ from pprint import pprint
 from io import BytesIO
 from collections import defaultdict
 
-from maxcube import bcd
-
 import datetime
 
 def handle_output_H(line):

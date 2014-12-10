@@ -1,0 +1,10 @@
+1. For executing the unit tests is nose for python3 required.
+
+2. To install nose try 
+	sudo pip3 install nose
+
+3. Try run the tests with   
+	nosetests-3.4 tests/test_parsing.py
+	nosetests-3.4 tests/test_integration.py
+
+4. Be happy.
