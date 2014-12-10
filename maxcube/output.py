@@ -13,8 +13,12 @@ def display(s):
 
 
 def d(s, ident=0):
-	if isinstance(s, dict):
+	if s == None:
+		r = d_simple(s, ident)
+	elif isinstance(s, dict):
 		r = d_dict(s, ident)
+	elif isinstance(s, list) and len(s) < 4:
+		r = d_simple(s, ident)
 	elif isinstance(s, list):
 		r = d_list(s, ident)	
 	elif isinstance(s, (str, int, bytes, float, datetime.date, datetime.time)):
