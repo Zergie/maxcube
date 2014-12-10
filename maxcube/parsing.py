@@ -77,7 +77,7 @@ def handle_output_C(line):
     data['fw_version'] = ord(decoded.read(1))
     data['test_result'] = ord(decoded.read(1))
     data['serial'] = decoded.read(10)
-    if data['type'] == 2:
+    if data['type'] == 2 or data['type'] == 1:
         # RadiatorThermostat
         data['temperature_comfort'] = ord(decoded.read(1)) / 2
         data['temperature_eco'] = ord(decoded.read(1)) / 2
@@ -90,7 +90,13 @@ def handle_output_C(line):
         data['decalcification'] = decoded.read(1) # TODO
         data['valve_maximum'] = ord(decoded.read(1)) * (100 / 255)
         data['valve_offset'] = ord(decoded.read(1)) * (100 / 255)
-        data['program'] = decoded.read(182) # TODO
+        data['program_sat'] = handle_output_program(decoded.read(26))
+        data['program_sun'] = handle_output_program(decoded.read(26))
+        data['program_mon'] = handle_output_program(decoded.read(26))
+        data['program_tue'] = handle_output_program(decoded.read(26))
+        data['program_wed'] = handle_output_program(decoded.read(26))
+        data['program_thu'] = handle_output_program(decoded.read(26))
+        data['program_fri'] = handle_output_program(decoded.read(26))
     elif data['type'] == 3:
         # WallThermostat
         data['temperature_comfort'] = ord(decoded.read(1)) / 2
@@ -100,6 +106,21 @@ def handle_output_C(line):
         data['program'] = decoded.read(182) # TODO
 
     return data
+
+def handle_output_program(raw_bytes):
+    ret = []
+
+    for i in range(0,len(raw_bytes),2):
+        pair  = raw_bytes[i:i+2]
+
+        temp  = int((pair[0] >> 1) / 2)
+        minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
+
+        if minutes != 1440:
+            time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
+            ret.append([temp, time])
+    return ret
+
 
 def handle_output_L(line):
     data = {}
