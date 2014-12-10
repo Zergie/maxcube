@@ -28,7 +28,6 @@ def discover_cubes(limit=99):
             data, addr = sock.recvfrom(1024)
             
             if data[:8] == b'eQ3MaxAp':
-                print (data[24:26])
                 udp_answer = {
                     'serial' : data[8:18],
                     'unknown' : data[18:21],
@@ -41,8 +40,6 @@ def discover_cubes(limit=99):
                 limit -= 1
                 break
         sock.close()
-        
-        print(udp_answer)
         
         if udp_answer['fw_version'] < 109:
             yield addr[0], 80
