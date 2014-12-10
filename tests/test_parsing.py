@@ -106,6 +106,18 @@ def test_parsing_output_C():
         )
     )
 
+    ref = handle_output_C(
+            b'0b04be,0gsEvgIBEP9LRVEwNTcxNjc0LCE9CQcYA1CH/wBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIA==',
+        )
+
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_mon'])
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_tue'])
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_wed'])
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_thu'])
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_fri'])
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_sat'])
+    tools.assert_equal(b'DN\\fX\xfcU\x14E E E E E E E E E ', ref['program_sun'])
+
     tools.assert_equal(
         {
             'rf_address': b'0b04be',
@@ -122,15 +134,19 @@ def test_parsing_output_C():
             'duration_window_open': 3,
             'temperature_setpoint_max': 30.5,
             'valve_maximum': 100.0,
-            'program': b'DN\\fX\xfcU\x14E E E E E E E E E DN\\fX\xfcU\x14E E E E E E E E E DN\\fX\xfcU\x14E E E E E E E E E DN\\fX\xfcU\x14E E E E E E E E E DN\\fX\xfcU\x14E E E E E E E E E DN\\fX\xfcU\x14E E E E E E E E E DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_sat' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_sun' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_mon' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_tue' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_wed' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_thu' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
+            'program_fri' : b'DN\\fX\xfcU\x14E E E E E E E E E ',
             'temperature_setpoint_min': 4.5,
             'fw_version': 16,
             'temperature_comfort': 22.0,
             'temperature_window_open': 12.0
         },
-        handle_output_C(
-            b'0b04be,0gsEvgIBEP9LRVEwNTcxNjc0LCE9CQcYA1CH/wBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIA==',
-        )
+        ref
     )
 
     tools.assert_equal(
@@ -148,7 +164,13 @@ def test_parsing_output_C():
             'temperature_window_open': 12.0,
             'temperature_comfort': 23.0,
             'fw_version': 16,
-            'program': b'DN\\f[\x08U\x14E E E E E E E E E DN\\f[\x08U\x14E E E E E E E E E DN\\f[\x08U\x14E E E E E E E E E DN\\f[\x08U\x14E E E E E E E E E DN\\f[\x08U\x14E E E E E E E E E DN\\f[\x08U\x14E E E E E E E E E DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_sat' : b'DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_sun' : b'DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_mon' : b'DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_tue' : b'DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_wed' : b'DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_thu' : b'DN\\f[\x08U\x14E E E E E E E E E ',
+            'program_fri' : b'DN\\f[\x08U\x14E E E E E E E E E ',
             'type': 2,
             'rf_address': b'08b6d2',
             'duration_window_open': 3,

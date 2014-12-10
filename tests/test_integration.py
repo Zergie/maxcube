@@ -21,5 +21,9 @@ def test_integration():
     tools.assert_equal(2, len(cube.rooms))
     tools.assert_equal(3, len(cube.devices))
 
-
     output.display(cube)
+
+
+
+if __name__ == '__main__':
+	test_integration()
