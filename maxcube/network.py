@@ -39,7 +39,9 @@ def discover_cubes(limit=99):
                     }
                 limit -= 1
                 break
-        sock.close()
+        
+        if limit == 0:
+            sock.close()
         
         if udp_answer['fw_version'] < 109:
             yield addr[0], 80
