@@ -10,13 +10,16 @@ class MaxCube(object):
 		self.rooms = {}
 		self.devices = {}
 
-	def add_room(self, room):
+	def _add_room(self, room):
 		self.rooms[room.id] = room
 
-	def add_device(self, device):
+	def _add_device(self, device):
 		self.devices[device.serial] = device
 		if device.room_id:
-			self.rooms[device.room_id].add_device(device)
+			self.rooms[device.room_id]._add_device(device)
+
+	def send(self):
+		
 
 
 class Room(object):
@@ -26,7 +29,7 @@ class Room(object):
 		self.name = name
 		self.devices = []
 
-	def add_device(self, device):
+	def _add_device(self, device):
 		self.devices.append(device)
 
 
@@ -83,11 +86,11 @@ def from_parsed_data(data):
 	cube = MaxCube(address=header['rf_address'], serial=header['serial'], firmware_version=header['firmware_version'])
 
 	for room in meta['rooms'].values():
-		cube.add_room(Room(id=room['id'], address=room['rf_address'], name=room['name']))
+		cube._add_room(Room(id=room['id'], address=room['rf_address'], name=room['name']))
 
 	for device in meta['devices']:
 		klass = Device.get_device_type(device['type'])
-		cube.add_device(klass(device))
+		cube._add_device(klass(device))
 
 	for config in configuration:
 		if config['type'] != 0:

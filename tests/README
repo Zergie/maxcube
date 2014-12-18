@@ -6,5 +6,6 @@
 3. Try run the tests with   
 	nosetests-3.4 tests/test_parsing.py
 	nosetests-3.4 tests/test_integration.py
+	nosetests-3.4 tests/test_composing.py
 
 4. Be happy.

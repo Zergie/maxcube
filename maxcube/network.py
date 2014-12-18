@@ -16,6 +16,20 @@ def read_raw_data(host, port):
     return got
 
 
+def send_raw_data(host, port, data):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
+    s.settimeout(2)
+    s.send(data)
+    got = b''
+    while True:
+        try:
+            got += s.recv(100000)
+        except socket.timeout:
+            break
+    return got
+
+
 def discover_cubes(limit=99):
     HelloMessage =  bytes([0x65, 0x51, 0x33, 0x4d, 0x61, 0x78, 0x2a, 0x00, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x49]);
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -1,4 +1,4 @@
-import socket
+# -*- coding: utf-8 -*-
 import base64
 import binascii
 from pprint import pprint
