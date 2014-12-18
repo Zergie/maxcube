@@ -116,7 +116,7 @@ def handle_output_program(raw_bytes):
         temp  = int((pair[0] >> 1) / 2)
         minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
 
-        if minutes != 1440:
+        if minutes != 1440 and temp != 17:
             time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
             ret.append([temp, time])
     return ret
