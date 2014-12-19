@@ -1,100 +1,143 @@
 # -*- coding: utf-8 -*-
 
+from maxcube import composing
+from maxcube import network
+from maxcube import parsing
+from maxcube import output
+
 class MaxCube(object):
 	type_code = 0
 
-	def __init__(self, address, serial, firmware_version):
-		self.address = address
-		self.serial = serial
-		self.firmware_version = firmware_version
-		self.rooms = {}
-		self.devices = {}
+	def __init__(self, host, port):
+		self.host = host
+		self.port = port
 
-	def _add_room(self, room):
-		self.rooms[room.id] = room
+	def connect(self):
+		raw_data = network.read_raw_data(self.host, self.port)
+		self._setup(raw_data)
 
-	def _add_device(self, device):
-		self.devices[device.serial] = device
-		if device.room_id:
-			self.rooms[device.room_id]._add_device(device)
+	def _setup(self, raw_data):
+		data          = parsing.start(raw_data)
+		header        = data['H'][0]
+		meta          = data['M'][0]
+		configuration = data['C']
 
-	def send(self):
-		
+		self.rf_address       = header['rf_address']
+		self.serial           = header['serial']
+		self.firmware_version = header['firmware_version']	
+
+		self.devices              = {}
+		self.rooms                = {}
+		self.radiator_thermostats = []
+		self.wall_thermostats     = []
+		self.shutter_contacts     = []
+		self.eco_buttons          = []
+
+		# rooms
+		for room in meta['rooms'].values():
+			obj_room = Room(self, room['id'], room['rf_address'], room['name'])
+			self.rooms[room['id']] = obj_room
+
+		# devices
+		for device in meta['devices']:
+			if device['type'] == 1:
+				klass = RadiatorThermostat
+				llist  = self.radiator_thermostats
+			elif device['type'] == 2:
+				klass = RadiatorThermostatPlus
+				llist  = self.radiator_thermostats
+			elif device['type'] == 3:
+				klass = WallThermostat
+				llist  = self.wall_thermostats
+			elif device['type'] == 4:
+				klass = ShutterContact
+				llist  = self.shutter_contacts
+			elif device['type'] == 5:
+				klass = EcoButton
+				llist  = self.eco_buttons
+			else:
+				klass = None
+				llist  = None
+
+			obj_device                      = klass(self, device)
+			llist.append(obj_device)
+			self.devices[obj_device.serial] = obj_device 
+
+			if obj_device.room_id:
+				self.rooms[obj_device.room_id]._add_device(obj_device)
+
+		# config for devices
+		for config in configuration:
+			if config['type'] != 0:
+				self.devices[config['serial']]._add_configuration(config)
+
 
 
 class Room(object):
-	def __init__(self, id, address, name):
-		self.id = id
-		self.address = address
-		self.name = name
-		self.devices = []
+	def __init__(self, cube, id, rf_address, name):
+		self.cube       = cube
+		self.id         = id
+		self.rf_address = rf_address
+		self.name       = name
+		self.devices    = []
 
 	def _add_device(self, device):
 		self.devices.append(device)
 
 
+
 class Device(object):
-	def __init__(self, data):
-		self.address = data['rf_address']
-		self.serial  = data['serial']
-		self.room_id = data['room_id']
-		self.name 	 = data['name']
+	def __init__(self, cube, data):
+		self.cube       = cube
+		self.rf_address = data['rf_address']
+		self.serial     = data['serial']
+		self.room_id    = data['room_id']
+		self.name 	    = data['name']
 
-	def add_configuration(self, data):
+	def _add_configuration(self, data):
 		self.raw_data = data
-
-	@classmethod
-	def get_device_type(cls, type_code):
-		return {c.type_code: c for c in cls.__subclasses__()}.get(type_code, cls)
 
 
 class RadiatorThermostat(Device):
 	type_code = 1
 
-	def add_configuration(self, data):
+	def _add_configuration(self, config):
 		self.program = {
-			'monday'	: data['program_mon'],
-			'tuesday'	: data['program_tue'],
-			'wednesday'	: data['program_wed'],
-			'thursday'	: data['program_thu'],
-			'friday'	: data['program_fri'],
-			'saturday'	: data['program_sat'],
-			'sunday'	: data['program_sun']
+			'monday'	: config['program_mon'],
+			'tuesday'	: config['program_tue'],
+			'wednesday'	: config['program_wed'],
+			'thursday'	: config['program_thu'],
+			'friday'	: config['program_fri'],
+			'saturday'	: config['program_sat'],
+			'sunday'	: config['program_sun']
 		}
 
+	def set_temp_permanent(self, temp):
+		message = composing.compose_s(self.rf_address, self.room_id, temp, 1, None, None)
+		print('-> ', message)
 
-class RadiatorThermostatPlus(Device):
+		raw_data = network.write_raw_data(self.cube.host, self.cube.port, message)
+		self.cube._setup(raw_data)
+		output.display(self.cube)
+		#print('<- ', message)
+
+	def set_temp_until(self, temp, date_until, time_until):
+		message = composing.compose_s(self.rf_address, self.room_id, temp, 2, date_until, time_until)
+		message = network.write_raw_data(self.cube.host, self.cube.port, message)
+		
+
+	def set_temp_auto(self):
+		message = composing.compose_s(self.rf_address, self.room_id, 0, 0, None, None)
+		print(message)
+
+
+
+class RadiatorThermostatPlus(RadiatorThermostat):
 	type_code = 2
-
-	def add_configuration(self, data):
-		RadiatorThermostat.add_configuration(self, data)
-
 class WallThermostat(Device):
 	type_code = 3
 class ShutterContact(Device):
 	type_code = 4
 class EcoButton(Device):
 	type_code = 5
-
-
-
-def from_parsed_data(data):
-	header = data['H'][0]
-	meta = data['M'][0]
-	configuration = data['C']
-
-	cube = MaxCube(address=header['rf_address'], serial=header['serial'], firmware_version=header['firmware_version'])
-
-	for room in meta['rooms'].values():
-		cube._add_room(Room(id=room['id'], address=room['rf_address'], name=room['name']))
-
-	for device in meta['devices']:
-		klass = Device.get_device_type(device['type'])
-		cube._add_device(klass(device))
-
-	for config in configuration:
-		if config['type'] != 0:
-			cube.devices[config['serial']].add_configuration(config)
-
-	return cube
 

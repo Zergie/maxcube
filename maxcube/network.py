@@ -10,13 +10,13 @@ def read_raw_data(host, port):
     got = b''
     while True:
         try:
-            got += s.recv(100000)
+            got += s.recv(8192)
         except socket.timeout:
             break
     return got
 
 
-def send_raw_data(host, port, data):
+def write_raw_data(host, port, data):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port))
     s.settimeout(2)
@@ -24,7 +24,7 @@ def send_raw_data(host, port, data):
     got = b''
     while True:
         try:
-            got += s.recv(100000)
+            got += s.recv(8192)
         except socket.timeout:
             break
     return got

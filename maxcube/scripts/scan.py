@@ -18,21 +18,16 @@ def main():
 	print("searching maxcube(s)..")
 
 	for tcp_addr, tcp_port in network.discover_cubes(limit = 1):
-		raw_data = network.read_raw_data(tcp_addr, tcp_port)
-
-		print('')
-		print('raw_data:')
-		output.display(raw_data)
-		
-		print('')
-		print('parsed_data:')
-		parsed_data = parsing.start(raw_data)
-		output.display(parsed_data)
-		
 		print('')
 		print('Cube:')
-		cube = objects.from_parsed_data(parsed_data)
+		cube = objects.MaxCube(tcp_addr, tcp_port)
+		cube.connect()
 		output.display(cube)
+
+		print('setting temp to 30')
+		for thermostat in cube.radiator_thermostats:
+			output.display(thermostat)
+			thermostat.set_temp_permanent(30)
 	
 if __name__ == '__main__':
 	main()
