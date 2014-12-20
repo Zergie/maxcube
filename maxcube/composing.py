@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import binascii
 import datetime
 
 def compose_s(rf_adress, room_id, temp, mode, date_until, time_until):
 	# modes:
-	# 0 = Auto weekprog (no temp is needed, just make the whole byte 00)
-	# 1 = Permanent
-	# 2 = Temporarily
-
+	# 0 = modus auto
+	# 1 = modus manuell
+	# 2 = ??
 	message = bytes(compile_s(rf_adress, room_id, temp, mode, date_until, time_until))
 
 	ret  = b's:' 
@@ -38,10 +38,10 @@ def compile_s(rf_adress, room_id, temp, mode, date_until, time_until):
 		time_encoded = [int((float(time_until.hour) + float(time_until.minute / 60)) * 2)]
 
 	message  = [0x00, 0x04, 0x40, 0x00, 0x00, 0x00]
-	message += rf_adress
+	message += list(binascii.a2b_hex(rf_adress))
 	message += [room_id]
 	message += temp_pair
 	message += date_encoded
 	message += time_encoded
-
+	
 	return message

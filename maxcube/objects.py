@@ -5,16 +5,35 @@ from maxcube import network
 from maxcube import parsing
 from maxcube import output
 
+import socket
+
 class MaxCube(object):
 	type_code = 0
 
 	def __init__(self, host, port):
 		self.host = host
 		self.port = port
+		self.sock = None
 
 	def connect(self):
-		raw_data = network.read_raw_data(self.host, self.port)
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.sock.connect((self.host, self.port))
+		
+		raw_data = b''
+		while 1:
+			buf = self.sock.recv(8192)
+			raw_data += buf
+			if buf[0:2] == b'L:': break
+			
 		self._setup(raw_data)
+
+	def close(self):
+		self.sock.close()
+
+	def status(self):
+		self.sock.send(b'l:\r\n')
+		raw_data = self.sock.recv(8192)
+		return parsing.handle_output(raw_data)[1]
 
 	def _setup(self, raw_data):
 		data          = parsing.start(raw_data)
@@ -61,7 +80,7 @@ class MaxCube(object):
 
 			obj_device                      = klass(self, device)
 			llist.append(obj_device)
-			self.devices[obj_device.serial] = obj_device 
+			self.devices[obj_device.rf_address] = obj_device 
 
 			if obj_device.room_id:
 				self.rooms[obj_device.room_id]._add_device(obj_device)
@@ -69,7 +88,7 @@ class MaxCube(object):
 		# config for devices
 		for config in configuration:
 			if config['type'] != 0:
-				self.devices[config['serial']]._add_configuration(config)
+				self.devices[config['rf_address']]._add_configuration(config)
 
 
 
@@ -97,6 +116,10 @@ class Device(object):
 	def _add_configuration(self, data):
 		self.raw_data = data
 
+	def status(self):
+		status = self.cube.status()
+		return status[self.rf_address]
+
 
 class RadiatorThermostat(Device):
 	type_code = 1
@@ -112,20 +135,18 @@ class RadiatorThermostat(Device):
 			'sunday'	: config['program_sun']
 		}
 
-	def set_temp_permanent(self, temp):
-		message = composing.compose_s(self.rf_address, self.room_id, temp, 1, None, None)
+	def set_temp(self, temp):
+		message = composing.compose_s(self.rf_address, self.room_id, temp, 0, None, None)
+		
 		print('-> ', message)
+		self.cube.sock.send(message)
 
-		raw_data = network.write_raw_data(self.cube.host, self.cube.port, message)
-		self.cube._setup(raw_data)
-		output.display(self.cube)
-		#print('<- ', message)
+		print('<- ', self.cube.sock.recv(1024))
 
 	def set_temp_until(self, temp, date_until, time_until):
 		message = composing.compose_s(self.rf_address, self.room_id, temp, 2, date_until, time_until)
-		message = network.write_raw_data(self.cube.host, self.cube.port, message)
+		print(message)
 		
-
 	def set_temp_auto(self):
 		message = composing.compose_s(self.rf_address, self.room_id, 0, 0, None, None)
 		print(message)

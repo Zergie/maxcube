@@ -24,10 +24,18 @@ def main():
 		cube.connect()
 		output.display(cube)
 
-		print('setting temp to 30')
-		for thermostat in cube.radiator_thermostats:
-			output.display(thermostat)
-			thermostat.set_temp_permanent(30)
+		thermostat = cube.devices[b'0fc380']
+		
+		while 1:
+			print(thermostat.status())
+			temp = input('temp for 0fc380: ')
+
+			if len(temp) > 0:
+				thermostat.set_temp(int(temp))
+			
+			
+
+		cube.close()
 	
 if __name__ == '__main__':
 	main()

@@ -135,13 +135,36 @@ def handle_output_L(line):
             break
         device['rf_address'] = binascii.b2a_hex(decoded.read(3))
         device['?1'] = ord(decoded.read(1))
-        device['flags_1'] = ord(decoded.read(1)) # TODO
-        device['flags_2'] = ord(decoded.read(1)) # TODO
+        
+        device['flags_1'] = ord(decoded.read(1)) 
+        # bits for flags_1:
+        # bit 4     Valid              0=invalid;1=information provided is valid
+        # bit 3     Error              0=no; 1=Error occurred
+        # bit 2     Answer             0=an answer to a command,1=not an answer to a command
+        # bit 1     Status initialized 0=not initialized, 1=yes
+        #      
+        # 12  = 00010010b
+        #     = Valid, Initialized
+
+        device['flags_2'] = ord(decoded.read(1)) 
+        # bits for flags_2:
+        # bit 7     Battery       1=Low
+        # bit 6     Linkstatus    0=OK,1=error
+        # bit 5     Panel         0=unlocked,1=locked
+        # bit 4     Gateway       0=unknown,1=known
+        # bit 3     DST setting   0=inactive,1=active
+        # bit 2     Not used
+        # bit 1,0   Mode         00=auto/week schedule
+        #                        01=Manual
+        #                        10=Vacation
+        #                        11=Boost   
+        # 1A  = 00011010b
+        #     = Battery OK, Linkstatus OK, Panel unlocked, Gateway known, DST active, Mode Vacation.
         if device['len'] > 6:
-            device['valve_position'] = ord(decoded.read(1)) # TODO ? in perc?
+            device['valve_position'] = ord(decoded.read(1)) # Valve position in %
             device['temperature_setpoint'] = ord(decoded.read(1)) / 2
-            device['date_until'] = decoded.read(2)
-            device['time_until'] = decoded.read(1)
+            device['date_until'] = decoded.read(2) # todo: convert to datetime.datetime
+            device['time_until'] = decoded.read(1) # todo: convert to datetime.time
         data[device['rf_address']] = device
     return data
 
