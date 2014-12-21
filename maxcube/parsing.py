@@ -1,236 +1,169 @@
 # -*- coding: utf-8 -*-
-import base64
-import binascii
-from pprint import pprint
-from io import BytesIO
-from collections import defaultdict
+from maxcube.message_fields import *
 
 import datetime
-
-# concept start
-class PropertyContainer(object):
-    def __init__(self):
-        pass
-
-
-class FieldTyp(object): 
-    def __init__(self, name, length=-1):
-        self.name   = name
-        self.length = length
-    def parse(self, raw_bytes):
-        if self.length == -1:
-            ret = self.decode(raw_bytes)
-        else:
-            ret = self.decode(raw_bytes[:self.length])
-        #print(ret)
-        return ret
-
-class pFixed   (FieldTyp):
-    def __init__(self, name, fixed_data):
-        self.fixed_data = fixed_data
-        FieldTyp.__init__(self, name)
-    def decode(self, raw_bytes):
-        if isinstance(self.fixed_data, int):
-            return 1, {self.name: self.fixed_data}
-        else:
-            return len(self.fixed_data), {self.name: self.fixed_data}
-
-class pString(FieldTyp):
-    def decode(self, raw_bytes):
-        return len(raw_bytes), {self.name: raw_bytes.decode()}
-
-class pStringVL(FieldTyp):
-    def decode(self, raw_bytes):
-        length = int(raw_bytes[0])
-        return length+1, {self.name: raw_bytes[1:1+length].decode()}
-
-class pDate(FieldTyp):
-    def decode(self, raw_bytes):
-        return len(raw_bytes), {self.name: datetime.date(2000 + int(raw_bytes[0:2], 16), int(raw_bytes[2:4], 16), int(raw_bytes[4:6], 16))}
-
-class pTime(FieldTyp):
-    def decode(self, raw_bytes):
-        return len(raw_bytes), {self.name: datetime.time(int(raw_bytes[0:2], 16), int(raw_bytes[2:4], 16))}
-
-class pByte(FieldTyp):
-    def decode(self, raw_bytes):
-        return len(raw_bytes), {self.name: binascii.b2a_hex(raw_bytes)}
-
-class pInteger(FieldTyp):
-    def decode(self, raw_bytes):
-        return len(raw_bytes), {self.name: int.from_bytes(raw_bytes, byteorder='big')}
-
-class pTempPair (FieldTyp):
-    def decode(self, raw_bytes):
-        pass
-class pHexDate  (FieldTyp):
-    def decode(self, raw_bytes):
-        pass
-class pHexTime  (FieldTyp):
-    def decode(self, raw_bytes):
-        pass
-
-class pBase64   (FieldTyp):
-    def __init__(self, *fields):
-        self.fields = fields
-    def parse(self, raw_bytes):
-        decoded = base64.decodebytes(raw_bytes)
-
-        start = 0
-        data  = {}
-        for obj in self.fields:
-            bytes_parsed, parsed_data = obj.parse(decoded[start:])
-
-            data.update(parsed_data)
-            start += bytes_parsed
-
-            if start >= len(decoded):
-                break
-        return len(raw_bytes), data
-
-class pMultiple(FieldTyp):
-    def __init__(self, name, *fields):
-        self.name   = name
-        self.fields = fields
-    def parse(self, raw_bytes):
-        count = int(raw_bytes[0])
-        start = 1
-        items = []
-
-        for j in range(0, count):
-            data = PropertyContainer()
-            for obj in self.fields:
-                bytes_parsed, parsed_data = obj.parse(raw_bytes[start:])
-
-                data.__dict__.update(parsed_data)
-                start += bytes_parsed
-            items.append(data)
-
-        return start, {self.name : items}
-
-class pCsv(FieldTyp):
-    def __init__(self, *fields):
-        self.fields = fields
-    def parse(self, raw_bytes):
-        parts   = raw_bytes.split(b',')
-
-        bytes_decoded = -1
-        data_decoded  = {}
-        for i in range(0, len(self.fields)):
-            obj = self.fields[i]
-            
-            count, data = obj.parse(parts[i].strip())
-
-            data_decoded.update(data)
-            bytes_decoded += len(parts[i]) + 1
-        return bytes_decoded, data_decoded
-
-class MessageTyp(object): 
-    def __init__(self, raw_bytes=None):
-        if raw_bytes != None:
-            self._parse(raw_bytes)
-
-    def _parse(self, raw_bytes):
-        start = 0
-
-        for obj in self.fields:
-            bytes_parsed, parsed_data = obj.parse(raw_bytes[start:])
-            
-            for k, v in parsed_data.items():
-                self.__dict__[k] = v
-
-            start += bytes_parsed
 
 
 class H_Message(MessageTyp):
     def __init__(self, raw_bytes):
-        self.fields = [pFixed('msg_type', b'H:')   ,
-                       pCsv(
-                            pString('serial'            ),
-                            pString('rf_address'        ),
-                            pString('firmware_version'  ),
-                            pString('unknown'           ),
-                            pString('http_connection_id'),
-                            pString('duty_cycle'        ),
-                            pString('free_memory_slots' ),
-                            pDate  ('cube_date'         ),
-                            pTime  ('cube_time'         ),
-                            pString('clock_set'         ),
-                            pString('unknown2'          )
+        self.fields = [ffixed('msg_type', b'H:')   ,
+                       fcsv(
+                            ffield('serial'            , ALL, str),
+                            ffield('rf_address'        , ALL, str),
+                            ffield('firmware_version'  , ALL, str),
+                            ffield('unknown'           , ALL, str),
+                            ffield('http_connection_id', ALL, str),
+                            ffield('duty_cycle'        , ALL, str),
+                            ffield('free_memory_slots' , ALL, str),
+                            ffield('cube_date'         , ALL, datetime.date),
+                            ffield('cube_time'         , ALL, datetime.time),
+                            ffield('clock_set'         , ALL, str),
+                            ffield('unknown2'          , ALL, str)
                             ),
-                       pFixed('_end', b'\r\n') ]
+                       ffixed('_end', b'\r\n') ]
         MessageTyp.__init__(self, raw_bytes)
+
+
 
 class C_Message(MessageTyp):
     def __init__(self, raw_bytes):
-        self.fields = [pFixed('msg_type', b'C:')   ,
-                       pCsv(
+        self.fields = [ffixed('msg_type', b'C:')   ,
+                       fcsv(
+                            ffield('rf_address_2', ALL, str),
+                            fbase64(
+                                    ffield('data_len'        ,   1, int),
+                                    ffield('rf_address'      ,   3, bytes),
+                                    ffield('type'            ,   1, int),
+                                    ffield('room_id'         ,   1, int),
+                                    ffield('firmware_version',   1, int),
+                                    ffield('test_result'     ,   1, int),
+                                    ffield('serial'          ,  10, str),
+                                    fchoose('type',
+                                           {
+                                           0 : [
+                                            ffield('portal_enabled'          ,   1, int),
+                                            ffield('unknown'                 ,  65, bytes),
+                                            ffield('portal_url'              ,  T0, str)],
+                                           1 : [
+                                            ffield('temperature_comfort'     ,   1, temp),          
+                                            ffield('temperature_eco'         ,   1, temp),      
+                                            ffield('temperature_setpoint_max',   1, temp),               
+                                            ffield('temperature_setpoint_min',   1, temp),               
+                                            ffield('temperature_offset'      ,   1, temp),         
+                                            ffield('temperature_window_open' ,   1, temp),              
+                                            ffield('duration_window_open'    ,   1, int),           
+                                            ffield('duration_boost'          ,   1, int),     
+                                            ffield('decalcification'         ,   1, int),      
+                                            ffield('valve_maximum'           ,   1, percent),    
+                                            ffield('valve_offset'            ,   1, percent),   
+                                            ffield('program_sat'             ,  26, bytes),   
+                                            ffield('program_sun'             ,  26, bytes),   
+                                            ffield('program_mon'             ,  26, bytes),   
+                                            ffield('program_tue'             ,  26, bytes),   
+                                            ffield('program_wed'             ,  26, bytes),   
+                                            ffield('program_thu'             ,  26, bytes),   
+                                            ffield('program_fri'             ,  26, bytes)],
+                                           2 : [
+                                            ffield('temperature_comfort'     ,   1, temp),          
+                                            ffield('temperature_eco'         ,   1, temp),      
+                                            ffield('temperature_setpoint_max',   1, temp),               
+                                            ffield('temperature_setpoint_min',   1, temp),               
+                                            ffield('temperature_offset'      ,   1, temp_offset),         
+                                            ffield('temperature_window_open' ,   1, temp),              
+                                            ffield('duration_window_open'    ,   1, int),           
+                                            ffield('duration_boost'          ,   1, int),     
+                                            ffield('decalcification'         ,   1, int),      
+                                            ffield('valve_maximum'           ,   1, percent),    
+                                            ffield('valve_offset'            ,   1, percent),   
+                                            ffield('program_sat'             ,  26, bytes),   
+                                            ffield('program_sun'             ,  26, bytes),   
+                                            ffield('program_mon'             ,  26, bytes),   
+                                            ffield('program_tue'             ,  26, bytes),   
+                                            ffield('program_wed'             ,  26, bytes),   
+                                            ffield('program_thu'             ,  26, bytes),   
+                                            ffield('program_fri'             ,  26, bytes)],
+                                           3 : [
+                                            ffield('temperature_comfort'     ,   1, temp),         
+                                            ffield('temperature_eco'         ,   1, temp),     
+                                            ffield('temperature_setpoint_max',   1, temp),              
+                                            ffield('temperature_setpoint_min',   1, temp),              
+                                            ffield('program_sat'             ,  26, bytes),   
+                                            ffield('program_sun'             ,  26, bytes),   
+                                            ffield('program_mon'             ,  26, bytes),   
+                                            ffield('program_tue'             ,  26, bytes),   
+                                            ffield('program_wed'             ,  26, bytes),   
+                                            ffield('program_thu'             ,  26, bytes),   
+                                            ffield('program_fri'             ,  26, bytes)],
+                                           4 : [],
+                                           5 : []
+                                            }),
+                                   ),
                            ),
-                       pFixed('_end', '\r\n') ]
+                       ffixed('_end', '\r\n') ]
         MessageTyp.__init__(self, raw_bytes)
+
+
 
 class M_Message(MessageTyp):
     def __init__(self, raw_bytes):
-        self.fields = [pFixed('msg_type', b'M:')   ,
-                       pCsv(                                            # todo: fcsv( ... )
-                            pFixed('unknown' , '00'),
-                            pFixed('unknown2', '01'),
-                            pBase64(                                    # todo: fbase64( ... )
-                                   pFixed('magicbyte', 0x56          ), # todo: fmagic('magicbyte', 0x56)
-                                   pFixed('version'  , 0x02          ),
-                                   pMultiple('rooms'                  ,
-                                             pInteger('id'       ,  1), # todo: ffield('id'       ,  1,  int)
-                                             pStringVL('name'        ), # todo: ffield('name'     , VL,  str)
-                                             pByte('rf_address'  ,  3)  # todo: ffield('rf_adress',  3,  byte)
-                                            ),,  3, byte
-                                   pMultiple('devices'                ,
-                                             pInteger('type'     ,  1),
-                                             pByte('rf_address'  ,  3),
-                                             pString('serial'    , 10), # todo: ffield('serial'   , 10,  str)
-                                             pStringVL('name'        ), # todo: ffield('name'     , VL,  str)
-                                             pInteger('room_id'  ,  1)
+        self.fields = [ffixed('msg_type', b'M:')   ,
+                       fcsv(                                            
+                            ffixed('unknown' , '00'),                   
+                            ffixed('unknown2', '01'),
+                            fbase64(                                    
+                                   ffixed('magicbyte', 0x56          ), 
+                                   ffixed('version'  , 0x02          ),
+                                   fmultiple('rooms'                  ,
+                                             ffield('id'         ,   1, int), 
+                                             ffield('name'       ,  VL, str), 
+                                             ffield('rf_address' ,   3, bytes)
                                             ),
-                                   pInteger('unknown3')
+                                   fmultiple('devices'                ,
+                                             ffield('type'       ,   1, int),
+                                             ffield('rf_address' ,   3, bytes),
+                                             ffield('serial'     ,  10, str),
+                                             ffield('name'       ,  VL, str),
+                                             ffield('room_id'    ,   1, int)
+                                            ),
+                                   ffield('unknown3', ALL, int)
                                    )
                             ),
-                       pFixed('_end', '\r\n') ]
+                       ffixed('_end', '\r\n') ]
         MessageTyp.__init__(self, raw_bytes)
+
+
 
 class L_Message(MessageTyp):
     def __init__(self, raw_bytes):
-        self.fields = [pFixed('msg_type', b'L:')   ,
-                       pCsv(
+        self.fields = [ffixed('msg_type', b'L:')   ,
+                       fcsv(
                            ),
-                       pFixed('_end', '\r\n') ]
+                       ffixed('_end', '\r\n') ]
         MessageTyp.__init__(self, raw_bytes)
+
+
 
 #class s_Message(MessageTyp):
 #    def __init__(self):
-#        self.fields = {'msg_type'            : pFixed('s:')    ,
-#                        pBase64('magic'     ,  pFixed([0x00, 0x04, 0x40, 0x00, 0x00, 0x00]) ,
+#        self.fields = {'msg_type'            : ffixed('s:')    ,
+#                        fbase64('magic'     ,  ffixed([0x00, 0x04, 0x40, 0x00, 0x00, 0x00]) ,
 #                                'rf_address',  pHex()          ,
 #                                'room_id'   ,  pHex()          ,
 #                                'temp_pair' ,  pTempPair()     ,
 #                                'date'      ,  pHexDate(0, 1)  ,
 #                                'time'      ,  pHexTime(0, 1)) ,
-#                       ''                   :  pFixed('\r\n')  }
+#                       ''                   :  ffixed('\r\n')  }
 #                      }
-
-# concept end
 
 def start(raw_data):
     ret = []
     for line in raw_data.split(b'\r\n'):
-        ret.append(handle_output(line + b'\r\n'))
+        if len(line) > 0:
+            ret.append(handle_output(line + b'\r\n'))
     return ret
 
 def handle_output(line):
-    if not line:
-        return None, None
-    elif len(line) == 2:
-        return None, None
-
-    print(line[0:10], len(line))
+    #print('handle_output=', line)
     msg_type = chr(line[0]) + '_'
     
     for c in MessageTyp.__subclasses__():
@@ -238,74 +171,7 @@ def handle_output(line):
             break
 
     message = c(line)
-    print(message)
     return message
-
-
-def handle_output_H(line):
-    serial, rf_address, firmware_version, unknown, http_connection_id, duty_cycle, free_memory_slots, cube_date, cube_time, clock_set, unknown2  = line.decode().strip().split(',')
-
-    cube_date = datetime.date(2000 + int(cube_date[0:2], 16), int(cube_date[2:4], 16), int(cube_date[4:6], 16))
-    cube_time = datetime.time(int(cube_time[0:2], 16), int(cube_time[2:4], 16))
-    return {
-        'serial': serial,
-        'rf_address': rf_address,
-        'firmware_version': firmware_version,
-        '?1' : unknown,
-        'http_connection_id' : http_connection_id,
-    	'duty_cycle' : duty_cycle,
-		'free_memory_slots' : free_memory_slots,
-        'cube_date' : cube_date,
-        'cube_time' : cube_time,
-    	'clock_set' : clock_set,
-    	'?2' : unknown2
-    }
-
-
-
-
-
-
-
-
-def handle_output_M(line):
-    position = 0
-    data = {}
-    _1, _2, encoded = line.strip().split(b',', 2)
-    decoded = BytesIO(base64.decodebytes(encoded))
-
-    data['magicbyte'] = ord(decoded.read(1)) # Meta Data Magic. Should always be 0x56
-    data['version'] = ord(decoded.read(1)) # Meta data version. Should always be 0x02
-
-    # Rooms
-    data['room_count'] = ord(decoded.read(1))
-    data['rooms'] = {}
-    for i in range(data['room_count']):
-        room = {}
-        room['id'] = ord(decoded.read(1))
-        room['name_len'] = ord(decoded.read(1))
-        room['name'] = decoded.read(room['name_len'])
-        room['rf_address'] = binascii.b2a_hex(decoded.read(3))
-        data['rooms'][room['id']] = room
-
-    # Devices
-    data['devices_count'] = ord(decoded.read(1))
-    data['devices'] = []
-    for i in range(data['devices_count']):
-        device = {}
-        device['type'] = ord(decoded.read(1))
-        device['rf_address'] = binascii.b2a_hex(decoded.read(3))
-        device['serial'] = decoded.read(10)
-        device['name_len'] = ord(decoded.read(1))
-        device['name'] = decoded.read(device['name_len'])
-        device['room_id'] = ord(decoded.read(1))
-
-        data['devices'].append(device)
-
-    # Unknown byte
-    data['?2'] = decoded.read(1)
-
-    return data
 
 def handle_output_C(line):
     data = {}
@@ -347,20 +213,6 @@ def handle_output_C(line):
         data['program'] = decoded.read(182) # TODO
 
     return data
-
-def handle_output_program(raw_bytes):
-    ret = []
-
-    for i in range(0,len(raw_bytes),2):
-        pair  = raw_bytes[i:i+2]
-
-        temp  = int((pair[0] >> 1) / 2)
-        minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
-
-        if minutes != 1440 and temp != 17:
-            time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
-            ret.append([temp, time])
-    return ret
 
 
 def handle_output_L(line):
@@ -412,13 +264,5 @@ def handle_output_L(line):
 def handle_output_default(line):
     print('handling default')
     print(line)
-
-OUTPUT_SIGNATURES = {
-    b'H:': handle_output_H,
-    b'M:': handle_output_M,
-    b'C:': handle_output_C,
-    b'L:': handle_output_L,
-}
-DEFAULT_OUTPUT = handle_output_default
 
 
