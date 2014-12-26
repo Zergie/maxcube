@@ -19,22 +19,11 @@ def main():
 
 	for tcp_addr, tcp_port in network.discover_cubes(limit = 1):
 		print('')
-		print('Cube:')
+		print('Cube:', tcp_addr, tcp_port)
+		
 		cube = objects.MaxCube(tcp_addr, tcp_port)
 		cube.connect()
-		output.display(cube)
-
-		thermostat = cube.devices[b'0fc380']
-		
-		while 1:
-			print(thermostat.status())
-			temp = input('temp for 0fc380: ')
-
-			if len(temp) > 0:
-				thermostat.set_temp(int(temp))
-			
-			
-
+		output.display(cube)			
 		cube.close()
 	
 if __name__ == '__main__':

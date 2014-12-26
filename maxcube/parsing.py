@@ -42,7 +42,7 @@ class C_Message(MessageTyp):
                                            {
                                            0 : [
                                             ffield('portal_enabled'          ,   1, int),
-                                            ffield('unknown'                 ,  65, bytes),
+                                            ffield('unknown'                 ,  66, bytes),
                                             ffield('portal_url'              ,  T0, str)],
                                            1 : [
                                             ffield('temperature_comfort'     ,   1, temp),          
@@ -56,13 +56,7 @@ class C_Message(MessageTyp):
                                             ffield('decalcification'         ,   1, int),      
                                             ffield('valve_maximum'           ,   1, percent),    
                                             ffield('valve_offset'            ,   1, percent),   
-                                            ffield('program_sat'             ,  26, bytes),   
-                                            ffield('program_sun'             ,  26, bytes),   
-                                            ffield('program_mon'             ,  26, bytes),   
-                                            ffield('program_tue'             ,  26, bytes),   
-                                            ffield('program_wed'             ,  26, bytes),   
-                                            ffield('program_thu'             ,  26, bytes),   
-                                            ffield('program_fri'             ,  26, bytes)],
+                                            ffield('program'                 , 182, weeklyprogram)],
                                            2 : [
                                             ffield('temperature_comfort'     ,   1, temp),          
                                             ffield('temperature_eco'         ,   1, temp),      
@@ -75,25 +69,13 @@ class C_Message(MessageTyp):
                                             ffield('decalcification'         ,   1, int),      
                                             ffield('valve_maximum'           ,   1, percent),    
                                             ffield('valve_offset'            ,   1, percent),   
-                                            ffield('program_sat'             ,  26, bytes),   
-                                            ffield('program_sun'             ,  26, bytes),   
-                                            ffield('program_mon'             ,  26, bytes),   
-                                            ffield('program_tue'             ,  26, bytes),   
-                                            ffield('program_wed'             ,  26, bytes),   
-                                            ffield('program_thu'             ,  26, bytes),   
-                                            ffield('program_fri'             ,  26, bytes)],
+                                            ffield('program'                 , 182, weeklyprogram)],
                                            3 : [
                                             ffield('temperature_comfort'     ,   1, temp),         
                                             ffield('temperature_eco'         ,   1, temp),     
                                             ffield('temperature_setpoint_max',   1, temp),              
                                             ffield('temperature_setpoint_min',   1, temp),              
-                                            ffield('program_sat'             ,  26, bytes),   
-                                            ffield('program_sun'             ,  26, bytes),   
-                                            ffield('program_mon'             ,  26, bytes),   
-                                            ffield('program_tue'             ,  26, bytes),   
-                                            ffield('program_wed'             ,  26, bytes),   
-                                            ffield('program_thu'             ,  26, bytes),   
-                                            ffield('program_fri'             ,  26, bytes)],
+                                            ffield('program'                 , 182, weeklyprogram)],
                                            4 : [],
                                            5 : []
                                             }),
@@ -136,12 +118,36 @@ class M_Message(MessageTyp):
 class L_Message(MessageTyp):
     def __init__(self, raw_bytes):
         self.fields = [ffixed('msg_type', b'L:')   ,
-                       fcsv(
-                           ),
+                       fbase64(
+                            fchoose('length',
+                                    {
+                                    6 : [
+                                     ffield('rf_address'          ,   3, bytes),
+                                     ffield('unknown'             ,   1, bytes),
+                                     ffield('flags_1'             ,   1, bytes),
+                                     ffield('flags_2'             ,   1, bytes)],
+                                    11 : [
+                                     ffield('rf_address'          ,   3, bytes),
+                                     ffield('unknown'             ,   1, bytes),
+                                     ffield('flags_1'             ,   1, bytes),
+                                     ffield('flags_2'             ,   1, bytes),
+                                     ffield('valve_position'      ,   1, percent),
+                                     ffield('temperature_setpoint',   1, temp),
+                                     ffield('date_until'          ,   2, bytes),
+                                     ffield('time_until'          ,   1, bytes)]
+                                    })
+                              ),
                        ffixed('_end', '\r\n') ]
         MessageTyp.__init__(self, raw_bytes)
 
 
+
+
+class l_Message(MessageTyp):
+    def __init__(self, raw_bytes):
+        self.fields = [ffixed('msg_type', b'l:')   ,
+                       ffixed('_end', '\r\n') ]
+        MessageTyp.__init__(self, raw_bytes)    
 
 #class s_Message(MessageTyp):
 #    def __init__(self):
@@ -165,13 +171,19 @@ def start(raw_data):
 def handle_output(line):
     #print('handle_output=', line)
     msg_type = chr(line[0]) + '_'
-    
+    cls = None
+
     for c in MessageTyp.__subclasses__():
         if c.__name__.startswith(msg_type):
+            cls = c
             break
 
-    message = c(line)
-    return message
+    if cls != None:
+        message = c(line)
+        return message
+    else:
+        return None
+
 
 def handle_output_C(line):
     data = {}

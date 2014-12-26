@@ -9,14 +9,15 @@ VL  = object() # variable length (length found in first bit)
 ALL = object() # no length restriction
 T0  = object() # decode until 0x00
 
-class temp(object):         __slots__ = ()
-class temp_offset(object):  __slots__ = ()
-class temppair(object):     __slots__ = ()
-class percent(object):      __slots__ = ()
+class temp(object):        __slots__ = ()
+class temp_offset(object): __slots__ = ()
+class temppair(object):    __slots__ = ()
+class percent(object):     __slots__ = ()
 
-class hexdate(object):      __slots__ = ()
-class hextime(object):      __slots__ = ()
-class dailyprogram(object): __slots__ = ()
+class hexdate(object):     __slots__ = ()
+class hextime(object):     __slots__ = ()
+class weeklyprogram(object):
+     __slots__ = ()
 
 class PropertyContainer(object): pass
 
@@ -62,11 +63,11 @@ class ffield(object):
         elif self.type is int:
             decoded_data = int.from_bytes(byte_data, byteorder='big')
         elif self.type is temp:
-        	decoded_data = int.from_bytes(byte_data, byteorder='big') / 2
+            decoded_data = int.from_bytes(byte_data, byteorder='big') / 2
         elif self.type is temp_offset:
-        	decoded_data = int.from_bytes(byte_data, byteorder='big') / 2 - 3.5
+            decoded_data = int.from_bytes(byte_data, byteorder='big') / 2 - 3.5
         elif self.type is percent:
-        	decoded_data = int.from_bytes(byte_data, byteorder='big') * (100 / 255)
+            decoded_data = int.from_bytes(byte_data, byteorder='big') * (100 / 255)
         elif self.type is bytes:
             decoded_data = binascii.b2a_hex(byte_data)
         elif self.type is datetime.date:
@@ -79,19 +80,23 @@ class ffield(object):
             decoded_data = None # todo
         elif self.type is hextime:
             decoded_data = None # todo
-        elif self.type is dailyprogram:
-            decoded_data = []
+        elif self.type is weeklyprogram:
+            decoded_data = {}
 
-            for i in range(0, byte_length, 2):
-                print('byte_data', byte_data[i:])
-                pair  = byte_data[i:i+2]
+            for day in ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri']:
+                decodec_data_day = []
+                
+                for i in range(0, 13):
+                    pair  = byte_data[(i*2):(i*2)+2]
 
-                temperature  = int((pair[0] >> 1) / 2)
-                minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
+                    temperature  = int((pair[0] >> 1) / 2)
+                    minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
 
-                if minutes != 1440 and temperature != 17:
-                    time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
-                    decoded_data.append([temperature, time])
+                    if minutes != 1440 and temperature != 17:
+                        time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
+                        decodec_data_day.append([temperature, time])
+
+                decoded_data[day] = decodec_data_day
         
         #pprint(decoded_data)
         return byte_length, {self.name : decoded_data}
@@ -129,8 +134,8 @@ class fbase64(object):
         data_decoded['unknown_base64'] = decoded[start:]
         if len(data_decoded['unknown_base64']) == 0:
             del(data_decoded['unknown_base64'])
-        else:
-            print('unknown_base64=', data_decoded['unknown_base64'])
+        #else:
+        #    print('unknown_base64=', data_decoded['unknown_base64'])
 
         return len(raw_bytes), data_decoded
 
@@ -215,8 +220,8 @@ class MessageTyp(object):
         self.unknown_raw = raw_bytes[start:]
         if len(self.unknown_raw) == 0:
             del(self.unknown_raw)
-        else:
-            print('unknown_raw=', self.unknown_raw)
+        #else:
+        #    print('unknown_raw=', self.unknown_raw)
 
         # cleanup __dict__
         del(self.fields)

@@ -85,25 +85,25 @@ def test_m_message():
     tools.assert_equal('Predsin',        parsed[0].rooms[1].name)
 
 def test_c_message():
-#    parsed = start(b'C:03f6c9,7QP2yQATAf9KRVEwNTQzNTQ1AQsABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsABEAAAAAAAAAAQQAAAAAAAAAAAAAAAAAAAAAAAAAAAGh0dHA6Ly93d3cubWF4LXBvcnRhbC5lbHYuZGU6ODAvY3ViZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAENFVAAACgADAAAOEENFU1QAAwACAAAcIA==\r\n')
-#    tools.assert_equal(237,              parsed[0].data_len)  
-#    tools.assert_equal(b'03f6c9',        parsed[0].rf_address)        
-#    tools.assert_equal('JEQ0543545',     parsed[0].serial)            
-#    tools.assert_equal(0,                parsed[0].type)
-#    tools.assert_equal(1,                parsed[0].firmware_version)
-#    tools.assert_equal(19,               parsed[0].room_id) 
-#    tools.assert_equal(255,              parsed[0].test_result)
-#    tools.assert_equal('http://www.max-portal.elv.de:80/cube',
-#                                         parsed[0].portal_url)
-#
-#    parsed = start(b'C:01b491,EQG0kQUAEg9KRVEwMzA1MjA1\r\n')
-#    tools.assert_equal(17,             parsed[0].data_len)
-#    tools.assert_equal(b'01b491',      parsed[0].rf_address)
-#    tools.assert_equal('JEQ0305205',   parsed[0].serial)
-#    tools.assert_equal(5,              parsed[0].type)
-#    tools.assert_equal(18,             parsed[0].firmware_version)
-#    tools.assert_equal(0,              parsed[0].room_id)
-#    tools.assert_equal(15,             parsed[0].test_result)
+    parsed = start(b'C:03f6c9,7QP2yQATAf9KRVEwNTQzNTQ1AQsABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsABEAAAAAAAAAAQQAAAAAAAAAAAAAAAAAAAAAAAAAAAGh0dHA6Ly93d3cubWF4LXBvcnRhbC5lbHYuZGU6ODAvY3ViZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAENFVAAACgADAAAOEENFU1QAAwACAAAcIA==\r\n')
+    tools.assert_equal(237,              parsed[0].data_len)  
+    tools.assert_equal(b'03f6c9',        parsed[0].rf_address)        
+    tools.assert_equal('JEQ0543545',     parsed[0].serial)            
+    tools.assert_equal(0,                parsed[0].type)
+    tools.assert_equal(1,                parsed[0].firmware_version)
+    tools.assert_equal(19,               parsed[0].room_id) 
+    tools.assert_equal(255,              parsed[0].test_result)
+    tools.assert_equal('http://www.max-portal.elv.de:80/cube',
+                                         parsed[0].portal_url)
+
+    parsed = start(b'C:01b491,EQG0kQUAEg9KRVEwMzA1MjA1\r\n')
+    tools.assert_equal(17,             parsed[0].data_len)
+    tools.assert_equal(b'01b491',      parsed[0].rf_address)
+    tools.assert_equal('JEQ0305205',   parsed[0].serial)
+    tools.assert_equal(5,              parsed[0].type)
+    tools.assert_equal(18,             parsed[0].firmware_version)
+    tools.assert_equal(0,              parsed[0].room_id)
+    tools.assert_equal(15,             parsed[0].test_result)
 
     parsed = start(b'C:0b04be,0gsEvgIBEP9LRVEwNTcxNjc0LCE9CQcYA1AM/wBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIA==\r\n')
     tools.assert_equal(b'0b04be',      parsed[0].rf_address)
@@ -124,111 +124,46 @@ def test_c_message():
     tools.assert_equal(3,              parsed[0].duration_window_open)
     tools.assert_equal(100.0,          parsed[0].valve_maximum)
     tools.assert_equal(16,             parsed[0].firmware_version)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_mon)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_tue)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_wed)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_thu)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_fri)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_sat)
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], 
-#                                       parsed[0].program_sun)
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['mon'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['tue'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['wed'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['thu'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['fri'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['sat'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]],     parsed[0].program['sun'])
 
     parsed = start(b'C:08b6d2,0gi20gICEABLRVEwNjM0NjA3LiE9CQcYA1AM/wBETlxmWwhVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZbCFUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlsIVRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWwhVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZbCFUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlsIVRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWwhVFEUgRSBFIEUgRSBFIEUgRSBFIA==\r\n')
-    
+    tools.assert_equal(80,             parsed[0].duration_boost)
+    tools.assert_equal(2,              parsed[0].room_id)
+    tools.assert_equal(0,              parsed[0].test_result)
+    tools.assert_equal(0.0,            parsed[0].valve_offset)
+    tools.assert_equal(30.5,           parsed[0].temperature_setpoint_max)
+    tools.assert_equal(100.0,          parsed[0].valve_maximum)
+    tools.assert_equal(4.5,            parsed[0].temperature_setpoint_min)
+    tools.assert_equal(210,            parsed[0].data_len)
+    tools.assert_equal(0.0,            parsed[0].temperature_offset)
+    tools.assert_equal(16.5,           parsed[0].temperature_eco)
+    tools.assert_equal(12.0,           parsed[0].temperature_window_open)
+    tools.assert_equal(23.0,           parsed[0].temperature_comfort)
+    tools.assert_equal(16,             parsed[0].firmware_version)
+    tools.assert_equal(2,              parsed[0].type)
+    tools.assert_equal(b'08b6d2',      parsed[0].rf_address)
+    tools.assert_equal(3,              parsed[0].duration_window_open)
+    tools.assert_equal(12,             parsed[0].decalcification)
+    tools.assert_equal('KEQ0634607',  parsed[0].serial)
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['sat'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['sun'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['mon'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['tue'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['wed'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['thu'])
+    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['fri'])
 
-#def test_parsing_output_C():
-#    tools.assert_equal(
-#        {
-#            'data_len': 237,
-#            'rf_address': b'03f6c9',
-#            'serial': b'JEQ0543545',
-#            'type': 0,
-#            'fw_version': 1,
-#            'room_id': 19,
-#            'test_result': 255
-#        },
-#        handle_output_C(
-#            b'03f6c9,7QP2yQATAf9KRVEwNTQzNTQ1AQsABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsABEAAAAAAAAAAQQAAAAAAAAAAAAAAAAAAAAAAAAAAAGh0dHA6Ly93d3cubWF4LXBvcnRhbC5lbHYuZGU6ODAvY3ViZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAENFVAAACgADAAAOEENFU1QAAwACAAAcIA==\r\n'
-#        )
-#    )
-#
-    #
-#    ref = handle_output_C(b'0b04be,0gsEvgIBEP9LRVEwNTcxNjc0LCE9CQcYA1CH/wBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZY/FUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlj8VRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWPxVFEUgRSBFIEUgRSBFIEUgRSBFIA==')
-#
-#    tools.assert_equal(b'0b04be',      ref['rf_address'])
-#    tools.assert_equal(80,             ref['duration_boost'])
-#    tools.assert_equal(0.0,            ref['temperature_offset'])
-#    tools.assert_equal(255,            ref['test_result'])
-#    tools.assert_equal(2,              ref['type'])
-#    tools.assert_equal(b'\x87',        ref['decalcification'])
-#    tools.assert_equal(b'KEQ0571674',  ref['serial'])
-#    tools.assert_equal(16.5,           ref['temperature_eco'])
-#    tools.assert_equal(1,              ref['room_id'])
-#    tools.assert_equal(210,            ref['data_len'])
-#    tools.assert_equal(0.0,            ref['valve_offset'])
-#    tools.assert_equal(3,              ref['duration_window_open'])
-#    tools.assert_equal(30.5,           ref['temperature_setpoint_max'])
-#    tools.assert_equal(100.0,          ref['valve_maximum'])
-#    tools.assert_equal(4.5,            ref['temperature_setpoint_min'])
-#    tools.assert_equal(16,             ref['fw_version'])
-#    tools.assert_equal(22.0,           ref['temperature_comfort'])
-#    tools.assert_equal(12.0,           ref['temperature_window_open'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_mon'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_tue'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_wed'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_thu'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_fri'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_sat'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(21, 0)], [21, datetime.time(23, 0)]], ref['program_sun'])
-#
-#
-#    ref = handle_output_C(b'08b6d2,0gi20gICEABLRVEwNjM0NjA3LiE9CQcYA1AM/wBETlxmWwhVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZbCFUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlsIVRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWwhVFEUgRSBFIEUgRSBFIEUgRSBFIEROXGZbCFUURSBFIEUgRSBFIEUgRSBFIEUgRE5cZlsIVRRFIEUgRSBFIEUgRSBFIEUgRSBETlxmWwhVFEUgRSBFIEUgRSBFIEUgRSBFIA==')
-#
-#    tools.assert_equal(80,             ref['duration_boost'])
-#    tools.assert_equal(2,              ref['room_id'])
-#    tools.assert_equal(0,              ref['test_result'])
-#    tools.assert_equal(0.0,            ref['valve_offset'])
-#    tools.assert_equal(30.5,           ref['temperature_setpoint_max'])
-#    tools.assert_equal(100.0,          ref['valve_maximum'])
-#    tools.assert_equal(4.5,            ref['temperature_setpoint_min'])
-#    tools.assert_equal(210,            ref['data_len'])
-#    tools.assert_equal(0.0,            ref['temperature_offset'])
-#    tools.assert_equal(16.5,           ref['temperature_eco'])
-#    tools.assert_equal(12.0,           ref['temperature_window_open'])
-#    tools.assert_equal(23.0,           ref['temperature_comfort'])
-#    tools.assert_equal(16,             ref['fw_version'])
-#    tools.assert_equal(2,              ref['type'])
-#    tools.assert_equal(b'08b6d2',      ref['rf_address'])
-#    tools.assert_equal(3,              ref['duration_window_open'])
-#    tools.assert_equal(b'\x0c',        ref['decalcification'])
-#    tools.assert_equal(b'KEQ0634607',  ref['serial'])
-#    print(ref['program_sat'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_sat'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_sun'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_mon'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_tue'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_wed'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_thu'])
-#    tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   ref['program_fri'])
-#
-#
-#    ref = handle_output_C(b'C:01b491,EQG0kQUAEg9KRVEwMzA1MjA1')
-#
-#    tools.assert_equal(17,             ref['data_len'])
-#    tools.assert_equal(b'01b491',      ref['rf_address'])
-#    tools.assert_equal(b'JEQ0305205',  ref['serial'])
-#    tools.assert_equal(5,              ref['type'])
-#    tools.assert_equal(18,             ref['fw_version'])
-#    tools.assert_equal(0,              ref['room_id'])
-#    tools.assert_equal(15,             ref['test_result'])
-#
-#
+def test_l_message():
+    parsed = start(b'L:CwsEvvYSGAAiANwACwi20lwSGAAiAOcABgG0kVwSEF==\r\n')
+    pprint(parsed[0].__dict__)
+
+
 #def test_parsing_output_L():
 #    tools.assert_equal(
 #        {
@@ -268,4 +203,4 @@ def test_c_message():
 #    )
 
 if __name__ == '__main__':
-    test_c_message()
+    test_l_message()
