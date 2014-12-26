@@ -11,11 +11,8 @@ T0  = object() # decode until 0x00
 
 class temp(object):        __slots__ = ()
 class temp_offset(object): __slots__ = ()
-class temppair(object):    __slots__ = ()
 class percent(object):     __slots__ = ()
 
-class hexdate(object):     __slots__ = ()
-class hextime(object):     __slots__ = ()
 class weeklyprogram(object):
      __slots__ = ()
 
@@ -71,15 +68,33 @@ class ffield(object):
         elif self.type is bytes:
             decoded_data = binascii.b2a_hex(byte_data)
         elif self.type is datetime.date:
-            decoded_data = datetime.date(2000 + int(byte_data[0:2], 16), int(byte_data[2:4], 16), int(byte_data[4:6], 16))
+            if byte_data == b'\x00\x00':
+                decoded_data = None
+            elif byte_length == 2:
+                # 10011101 00001011
+                # MMMDDDDD M YYYYYY
+                #          00111111 = 001011 => 2000 + 11 = 2011 (year)
+                # 11100000          
+                #          10000000 = 1000   => 8  (month)
+                # 00011111          = 11101  => 29 (day)
+
+                day   = (byte_data[0] & 0b00111111)
+                month = ((byte_data[0] & 0b11100000) >> 4) + ((byte_data[1] & 0b10000000) >> 7)
+                year   = (byte_data[1] & 0b00011111)
+
+                if day == 0:
+                    decoded_data = None # what does day=0 mean?
+                else:
+                    decoded_data = datetime.date(2000 + year, month, day)
+            else:
+                decoded_data = datetime.date(2000 + int(byte_data[0:2], 16), int(byte_data[2:4], 16), int(byte_data[4:6], 16))
         elif self.type is datetime.time:
-            decoded_data = datetime.time(int(byte_data[0:2], 16), int(byte_data[2:4], 16))
-        elif self.type is temppair:
-            decoded_data = None # todo 
-        elif self.type is hexdate:
-            decoded_data = None # todo
-        elif self.type is hextime:
-            decoded_data = None # todo
+            if byte_data == b'\x00':
+                decoded_data = None
+            elif byte_length == 1:
+                decoded_data = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=byte_data[0]*30)).time()
+            else:
+                decoded_data = datetime.time(int(byte_data[0:2], 16), int(byte_data[2:4], 16))
         elif self.type is weeklyprogram:
             decoded_data = {}
 
@@ -141,22 +156,35 @@ class fbase64(object):
 
 
 class fmultiple(object):
-    def __init__(self, name, *fields):
+    def __init__(self, name, count, *fields):
         self.name   = name
+        self.count = count
         self.fields = fields
+
     def parse(self, raw_bytes):
-        count = int(raw_bytes[0])
-        start = 1
+        if self.count == VL:
+            count = int(raw_bytes[0])
+            ret = self.decode(1, raw_bytes, count)
+        elif self.count == ALL:
+            ret = self.decode(0, raw_bytes, 999)
+        else:
+            ret = self.decode(1, raw_bytes, self.count)
+
+        return ret
+
+    def decode(self, start, byte_data, count):
         items = []
 
         for j in range(0, count):
             data = PropertyContainer()
             for obj in self.fields:
-                parsed_length, parsed_data = parse(obj,  data.__dict__, raw_bytes[start:])
-
+                parsed_length, parsed_data = parse(obj,  data.__dict__, byte_data[start:])
                 data.__dict__.update(parsed_data)
                 start += parsed_length
             items.append(data)
+
+            if start >= len(byte_data):
+                break
 
         return start, {self.name : items}
 
@@ -174,7 +202,7 @@ class fchoose(object):
         for obj in obj_list:
             byte_data = raw_bytes[start:]
             bytes_parsed, parsed_data = parse(obj,  data_decoded, byte_data)
-
+            print(parsed_data)
             data_decoded.update(parsed_data)
             start += bytes_parsed
 

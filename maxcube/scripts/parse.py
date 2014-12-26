@@ -21,7 +21,7 @@ def main():
 
 	if message[0] == None:
 		f = open('log.txt', 'a')
-		f.write(repr(sys.argv[0]))
+		f.write(repr(sys.argv[1]) + '\n')
 		f.close()
 
 

@@ -95,12 +95,12 @@ class M_Message(MessageTyp):
                             fbase64(                                    
                                    ffixed('magicbyte', 0x56          ), 
                                    ffixed('version'  , 0x02          ),
-                                   fmultiple('rooms'                  ,
+                                   fmultiple('rooms'             ,  VL,
                                              ffield('id'         ,   1, int), 
                                              ffield('name'       ,  VL, str), 
                                              ffield('rf_address' ,   3, bytes)
                                             ),
-                                   fmultiple('devices'                ,
+                                   fmultiple('devices'           , VL,
                                              ffield('type'       ,   1, int),
                                              ffield('rf_address' ,   3, bytes),
                                              ffield('serial'     ,  10, str),
@@ -114,28 +114,30 @@ class M_Message(MessageTyp):
         MessageTyp.__init__(self, raw_bytes)
 
 
-
 class L_Message(MessageTyp):
     def __init__(self, raw_bytes):
         self.fields = [ffixed('msg_type', b'L:')   ,
                        fbase64(
-                            fchoose('length',
-                                    {
-                                    6 : [
-                                     ffield('rf_address'          ,   3, bytes),
-                                     ffield('unknown'             ,   1, bytes),
-                                     ffield('flags_1'             ,   1, bytes),
-                                     ffield('flags_2'             ,   1, bytes)],
-                                    11 : [
-                                     ffield('rf_address'          ,   3, bytes),
-                                     ffield('unknown'             ,   1, bytes),
-                                     ffield('flags_1'             ,   1, bytes),
-                                     ffield('flags_2'             ,   1, bytes),
-                                     ffield('valve_position'      ,   1, percent),
-                                     ffield('temperature_setpoint',   1, temp),
-                                     ffield('date_until'          ,   2, bytes),
-                                     ffield('time_until'          ,   1, bytes)]
-                                    })
+                            fmultiple('devices'                             , ALL,
+                                      ffield('length'                       ,   1, int),
+                                      fchoose('length',
+                                              {
+                                              6 : [
+                                               ffield('rf_address'          ,   3, bytes),
+                                               ffield('unknown'             ,   1, int),
+                                               ffield('flags_1'             ,   1, int),
+                                               ffield('flags_2'             ,   1, int)],
+                                              11 : [
+                                               ffield('rf_address'          ,   3, bytes),
+                                               ffield('unknown'             ,   1, int),
+                                               ffield('flags_1'             ,   1, int),
+                                               ffield('flags_2'             ,   1, int),
+                                               ffield('valve_position'      ,   1, percent),
+                                               ffield('temperature_setpoint',   1, temp),
+                                               ffield('date_until'          ,   2, datetime.date),
+                                               ffield('time_until'          ,   1, datetime.time)]
+                                               })
+                                      )
                               ),
                        ffixed('_end', '\r\n') ]
         MessageTyp.__init__(self, raw_bytes)
@@ -183,49 +185,6 @@ def handle_output(line):
         return message
     else:
         return None
-
-
-def handle_output_C(line):
-    data = {}
-    prefix, encoded = line.strip().split(b',', 1)
-    decoded = BytesIO(base64.decodebytes(encoded))
-    data['data_len'] = ord(decoded.read(1))
-    data['rf_address'] = binascii.b2a_hex(decoded.read(3))
-    data['type'] = ord(decoded.read(1))
-    data['room_id'] = ord(decoded.read(1))
-    data['fw_version'] = ord(decoded.read(1))
-    data['test_result'] = ord(decoded.read(1))
-    data['serial'] = decoded.read(10)
-    if data['type'] == 2 or data['type'] == 1:
-        # RadiatorThermostat
-        data['temperature_comfort'] = ord(decoded.read(1)) / 2
-        data['temperature_eco'] = ord(decoded.read(1)) / 2
-        data['temperature_setpoint_max'] = ord(decoded.read(1)) / 2
-        data['temperature_setpoint_min'] = ord(decoded.read(1)) / 2
-        data['temperature_offset'] = (ord(decoded.read(1)) / 2) - 3.5
-        data['temperature_window_open'] = ord(decoded.read(1)) / 2
-        data['duration_window_open'] = ord(decoded.read(1))
-        data['duration_boost'] = ord(decoded.read(1)) # TODO
-        data['decalcification'] = decoded.read(1) # TODO
-        data['valve_maximum'] = ord(decoded.read(1)) * (100 / 255)
-        data['valve_offset'] = ord(decoded.read(1)) * (100 / 255)
-        data['program_sat'] = handle_output_program(decoded.read(26))
-        data['program_sun'] = handle_output_program(decoded.read(26))
-        data['program_mon'] = handle_output_program(decoded.read(26))
-        data['program_tue'] = handle_output_program(decoded.read(26))
-        data['program_wed'] = handle_output_program(decoded.read(26))
-        data['program_thu'] = handle_output_program(decoded.read(26))
-        data['program_fri'] = handle_output_program(decoded.read(26))
-    elif data['type'] == 3:
-        # WallThermostat
-        data['temperature_comfort'] = ord(decoded.read(1)) / 2
-        data['temperature_eco'] = ord(decoded.read(1)) / 2
-        data['temperature_setpoint_max'] = ord(decoded.read(1)) / 2
-        data['temperature_setpoint_min'] = ord(decoded.read(1)) / 2
-        data['program'] = decoded.read(182) # TODO
-
-    return data
-
 
 def handle_output_L(line):
     data = {}

@@ -150,7 +150,7 @@ def test_c_message():
     tools.assert_equal(b'08b6d2',      parsed[0].rf_address)
     tools.assert_equal(3,              parsed[0].duration_window_open)
     tools.assert_equal(12,             parsed[0].decalcification)
-    tools.assert_equal('KEQ0634607',  parsed[0].serial)
+    tools.assert_equal('KEQ0634607',   parsed[0].serial)
     tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['sat'])
     tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['sun'])
     tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['mon'])
@@ -161,46 +161,39 @@ def test_c_message():
 
 def test_l_message():
     parsed = start(b'L:CwsEvvYSGAAiANwACwi20lwSGAAiAOcABgG0kVwSEF==\r\n')
-    pprint(parsed[0].__dict__)
+
+    tools.assert_equal(len(parsed)           , 1)
+    tools.assert_equal(len(parsed[0].devices), 3)
+
+    pprint(parsed[0].devices[0].__dict__)
+
+    tools.assert_equal(246         , parsed[0].devices[0].unknown)
+    tools.assert_equal(None        , parsed[0].devices[0].date_until)
+    tools.assert_equal(18          , parsed[0].devices[0].flags_1)
+    tools.assert_equal(24          , parsed[0].devices[0].flags_2)
+    tools.assert_equal(11          , parsed[0].devices[0].length)
+    tools.assert_equal(b'0b04be'   , parsed[0].devices[0].rf_address)
+    tools.assert_equal(17.0        , parsed[0].devices[0].temperature_setpoint)
+    tools.assert_equal(None        , parsed[0].devices[0].time_until)
+    tools.assert_equal(0           , parsed[0].devices[0].valve_position)
+
+    tools.assert_equal(92          , parsed[0].devices[1].unknown)
+    tools.assert_equal(None        , parsed[0].devices[1].date_until)
+    tools.assert_equal(18          , parsed[0].devices[1].flags_1)
+    tools.assert_equal(24          , parsed[0].devices[1].flags_2)
+    tools.assert_equal(11          , parsed[0].devices[1].length)
+    tools.assert_equal(b'08b6d2'   , parsed[0].devices[1].rf_address)
+    tools.assert_equal(17.0        , parsed[0].devices[1].temperature_setpoint)
+    tools.assert_equal(None        , parsed[0].devices[1].time_until)
+    tools.assert_equal(0           , parsed[0].devices[1].valve_position)
+
+    tools.assert_equal(92          , parsed[0].devices[2].unknown)
+    tools.assert_equal(18          , parsed[0].devices[2].flags_1)
+    tools.assert_equal(16          , parsed[0].devices[2].flags_2)
+    tools.assert_equal(6           , parsed[0].devices[2].length)
+    tools.assert_equal(b'01b491'   , parsed[0].devices[2].rf_address)
 
 
-#def test_parsing_output_L():
-#    tools.assert_equal(
-#        {
-#            b'01b491': {
-#                '?1': 92,
-#                'flags_1': 18,
-#                'flags_2': 16,
-#                'len': 6,
-#                'rf_address': b'01b491',
-#            },
-#            b'08b6d2': {
-#                '?1': 92,
-#                'date_until': b'\x00\xe1',
-#                'flags_1': 18,
-#                'flags_2': 24,
-#                'len': 11,
-#                'rf_address': b'08b6d2',
-#                'temperature_setpoint': 17.0,
-#                'time_until': b'\x00',
-#                'valve_position': 0,
-#            },
-#            b'0b04be': {
-#                '?1': 246,
-#                'date_until': b'\x00\xdb',
-#                'flags_1': 18,
-#                'flags_2': 24,
-#                'len': 11,
-#                'rf_address': b'0b04be',
-#                'temperature_setpoint': 17.0,
-#                'time_until': b'\x00',
-#                'valve_position': 0,
-#            },
-#        },
-#        handle_output_L(
-#            b'CwsEvvYSGAAiANsACwi20lwSGAAiAOEABgG0kVwSEF=='
-#        )
-#    )
 
 if __name__ == '__main__':
     test_l_message()
