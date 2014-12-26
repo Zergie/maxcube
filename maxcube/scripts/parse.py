@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from pprint import pprint
 
 try:
 	from maxcube import parsing
@@ -21,8 +22,14 @@ def main():
 
 	if message[0] == None:
 		f = open('log.txt', 'a')
-		f.write(repr(sys.argv[1]) + '\n')
+	#	f.write(repr(sys.argv[1]) + '\n')
 		f.close()
+	elif message[0].msg_type == b's:' or message[0].msg_type == b'S:' :
+		f = open('log.txt', 'a')
+		#f.write(message[0].__dict__ + '\n')
+		pprint(message[0].__dict__, f)
+		f.close()
+
 
 
 if __name__ == '__main__':

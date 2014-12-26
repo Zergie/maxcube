@@ -3,11 +3,10 @@ import base64
 import binascii
 
 import datetime
+from math import log
 from pprint import pprint
+from maxcube.constants import *
 
-VL  = object() # variable length (length found in first bit)
-ALL = object() # no length restriction
-T0  = object() # decode until 0x00
 
 class temp(object):        __slots__ = ()
 class temp_offset(object): __slots__ = ()
@@ -25,10 +24,11 @@ def parse(field, data_already_parsed, raw_bytes):
 
 
 class ffield(object): 
-    def __init__(self, name, length, type):
-        self.name   = name
-        self.length = length
-        self.type   = type
+    def __init__(self, name, length, type, optional=False):
+        self.name     = name
+        self.length   = length
+        self.type     = type
+        self.optional = optional
 
     def parse(self, raw_bytes):
         if self.length == ALL:
@@ -60,7 +60,25 @@ class ffield(object):
         elif self.type is int:
             decoded_data = int.from_bytes(byte_data, byteorder='big')
         elif self.type is temp:
-            decoded_data = int.from_bytes(byte_data, byteorder='big') / 2
+            value = int.from_bytes(byte_data, byteorder='big')
+            temperature = (value & 0b01111111) / 2
+            
+            if ((value & 0b11000000) == 0b10000000):
+                mode = vacation
+            elif ((value & 0b11000000) == 0b00000000):
+                mode = auto
+            elif ((value & 0b11000000) == 0b01000000):
+                mode = manual
+            elif ((value & 0b11000000) == 0b11000000):
+                mode = boost
+
+            if temperature >= 30.5:
+                temperature = ON
+            elif temperature <= 4.5:
+                temperature = OFF
+
+            return byte_length, { self.name           : temperature, 
+                                  self.name + '_mode' : mode}
         elif self.type is temp_offset:
             decoded_data = int.from_bytes(byte_data, byteorder='big') / 2 - 3.5
         elif self.type is percent:
@@ -115,6 +133,27 @@ class ffield(object):
         
         #pprint(decoded_data)
         return byte_length, {self.name : decoded_data}
+
+
+class fflags(ffield):
+    def __init__(self, *fields):
+        # name, mask , {0 : ok, 1 : not ok}
+        self.fields = fields
+    def parse(self, raw_bytes):
+        data_decoded  = {}
+
+        for i in self.fields:
+            name   = i[0]
+            mask   = i[1]
+            values = i[2]
+            shift = int(log((1 + (mask ^ (mask-1))) >> 1, 2))
+
+            value  = (raw_bytes[0] & mask) >> shift
+
+            data_decoded[name] = values[value]
+        
+        return 1, data_decoded
+        
 
 
 class ffixed(ffield):
@@ -202,7 +241,6 @@ class fchoose(object):
         for obj in obj_list:
             byte_data = raw_bytes[start:]
             bytes_parsed, parsed_data = parse(obj,  data_decoded, byte_data)
-            print(parsed_data)
             data_decoded.update(parsed_data)
             start += bytes_parsed
 

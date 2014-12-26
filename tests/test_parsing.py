@@ -5,6 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.par
 
 from nose import tools
 from maxcube.parsing import start
+from maxcube.constants import *
 from pprint import pprint
 
 import datetime
@@ -110,8 +111,8 @@ def test_c_message():
     tools.assert_equal(80,             parsed[0].duration_boost)
     tools.assert_equal(22.0,           parsed[0].temperature_comfort)
     tools.assert_equal(16.5,           parsed[0].temperature_eco)
-    tools.assert_equal(30.5,           parsed[0].temperature_setpoint_max)
-    tools.assert_equal(4.5,            parsed[0].temperature_setpoint_min)
+    tools.assert_equal(ON,             parsed[0].temperature_setpoint_max)
+    tools.assert_equal(OFF,            parsed[0].temperature_setpoint_min)
     tools.assert_equal(0.0,            parsed[0].temperature_offset)
     tools.assert_equal(12.0,           parsed[0].temperature_window_open)
     tools.assert_equal(255,            parsed[0].test_result)
@@ -137,9 +138,9 @@ def test_c_message():
     tools.assert_equal(2,              parsed[0].room_id)
     tools.assert_equal(0,              parsed[0].test_result)
     tools.assert_equal(0.0,            parsed[0].valve_offset)
-    tools.assert_equal(30.5,           parsed[0].temperature_setpoint_max)
+    tools.assert_equal(ON,             parsed[0].temperature_setpoint_max)
     tools.assert_equal(100.0,          parsed[0].valve_maximum)
-    tools.assert_equal(4.5,            parsed[0].temperature_setpoint_min)
+    tools.assert_equal(OFF,            parsed[0].temperature_setpoint_min)
     tools.assert_equal(210,            parsed[0].data_len)
     tools.assert_equal(0.0,            parsed[0].temperature_offset)
     tools.assert_equal(16.5,           parsed[0].temperature_eco)
@@ -169,8 +170,6 @@ def test_l_message():
 
     tools.assert_equal(246         , parsed[0].devices[0].unknown)
     tools.assert_equal(None        , parsed[0].devices[0].date_until)
-    tools.assert_equal(18          , parsed[0].devices[0].flags_1)
-    tools.assert_equal(24          , parsed[0].devices[0].flags_2)
     tools.assert_equal(11          , parsed[0].devices[0].length)
     tools.assert_equal(b'0b04be'   , parsed[0].devices[0].rf_address)
     tools.assert_equal(17.0        , parsed[0].devices[0].temperature_setpoint)
@@ -179,8 +178,6 @@ def test_l_message():
 
     tools.assert_equal(92          , parsed[0].devices[1].unknown)
     tools.assert_equal(None        , parsed[0].devices[1].date_until)
-    tools.assert_equal(18          , parsed[0].devices[1].flags_1)
-    tools.assert_equal(24          , parsed[0].devices[1].flags_2)
     tools.assert_equal(11          , parsed[0].devices[1].length)
     tools.assert_equal(b'08b6d2'   , parsed[0].devices[1].rf_address)
     tools.assert_equal(17.0        , parsed[0].devices[1].temperature_setpoint)
@@ -188,8 +185,6 @@ def test_l_message():
     tools.assert_equal(0           , parsed[0].devices[1].valve_position)
 
     tools.assert_equal(92          , parsed[0].devices[2].unknown)
-    tools.assert_equal(18          , parsed[0].devices[2].flags_1)
-    tools.assert_equal(16          , parsed[0].devices[2].flags_2)
     tools.assert_equal(6           , parsed[0].devices[2].length)
     tools.assert_equal(b'01b491'   , parsed[0].devices[2].rf_address)
 
