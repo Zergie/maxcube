@@ -60,6 +60,16 @@ class ffield(object):
             return binascii.unhexlify(values[self.name])
         elif self.type is int:
             return bytes([values[self.name]])
+        elif self.type is datetime.time:
+            value = int((values[self.name].hour * 60 + values[self.name].minute) / 30)
+            return bytes([value])
+        elif self.type is datetime.date:
+            value  = [0x00, 0x00]
+            value[0] |= (values[self.name].day & 0b00111111)
+            value[0] |= (values[self.name].month & 0b00000001) << 7
+            value[0] |= (values[self.name].month & 0b00001110) << 4
+            value[1] |= ((values[self.name].year - 2000) & 0b00011111)
+            return bytes(value)
         else:
             return bytes(values[self.name])
     def parse(self, raw_bytes):

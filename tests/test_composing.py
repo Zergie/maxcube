@@ -45,3 +45,14 @@ def test_s_message():
 				}
 	composed = s_Message().compose(values)
 	tools.assert_equal(composed, b's:AARAAAAAD8OAAmw=\r\n')
+
+	values   = {'rf_address' : b'0fc380',
+				'room_id'    : 2,
+				'temp'       : 23.0,
+				'temp_mode'  : vacation,
+				'date_until' : datetime.date(2014, 12, 27),
+				'time_until' : datetime.time(20, 30)
+				}
+	composed = s_Message().compose(values)
+	tools.assert_equal(composed, b's:AARAAAAAD8OAAq7bDik=\r\n')
+	
