@@ -32,7 +32,7 @@ def test_parser():
 
     tools.assert_equal(7    , len(parsed))
 
-def test_h_message():
+def test_H_message():
     parsed = start(b'H:JEQ0543545,03f6c9,0113,00000000,4f001e1b,00,32,0d0c1d,1013,03,0000\r\n')
     tools.assert_equal(b'H:' ,       parsed[0].msg_type)
     tools.assert_equal('03f6c9',     parsed[0].rf_address)
@@ -47,7 +47,7 @@ def test_h_message():
     tools.assert_equal(datetime.date(2013, 12, 29), parsed[0].cube_date)
     tools.assert_equal(datetime.time(16, 19),        parsed[0].cube_time)
 
-def test_m_message():
+def test_M_message():
     parsed = start(b'M:00,01,VgICAg1PYnl2YWNpIHBva29qCLbSAQdQcmVkc2luCwS+AwILBL5LRVEwNTcxNjc0C3RvcGVuaSB1IHdjAQIIttJLRVEwNjM0NjA3CVBvZCBva25lbQIFAbSRSkVRMDMwNTIwNQpFY28gU3dpdGNoAAE=\r\n')
     tools.assert_equal(b'M:',        parsed[0].msg_type)
     tools.assert_equal(b'00',        parsed[0].index)
@@ -85,7 +85,10 @@ def test_m_message():
     tools.assert_equal(b'0b04be',        parsed[0].rooms[1].rf_address)
     tools.assert_equal('Predsin',        parsed[0].rooms[1].name)
 
-def test_c_message():
+    parsed = start(b'M:\r\n')
+    tools.assert_equal(b'M:',        parsed[0].msg_type)
+
+def test_C_message():
     parsed = start(b'C:03f6c9,7QP2yQATAf9KRVEwNTQzNTQ1AQsABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsABEAAAAAAAAAAQQAAAAAAAAAAAAAAAAAAAAAAAAAAAGh0dHA6Ly93d3cubWF4LXBvcnRhbC5lbHYuZGU6ODAvY3ViZQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAENFVAAACgADAAAOEENFU1QAAwACAAAcIA==\r\n')
     tools.assert_equal(237,              parsed[0].data_len)  
     tools.assert_equal(b'03f6c9',        parsed[0].rf_address)        
@@ -160,7 +163,7 @@ def test_c_message():
     tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['thu'])
     tools.assert_equal([[23, datetime.time(8, 30)], [22, datetime.time(22, 0)], [21, datetime.time(23, 0)]],   parsed[0].program['fri'])
 
-def test_l_message():
+def test_L_message():
     parsed = start(b'L:CwsEvvYSGAAiANwACwi20lwSGAAiAOcABgG0kVwSEF==\r\n')
 
     tools.assert_equal(len(parsed)           , 1)
@@ -188,7 +191,46 @@ def test_l_message():
     tools.assert_equal(6           , parsed[0].devices[2].length)
     tools.assert_equal(b'01b491'   , parsed[0].devices[2].rf_address)
 
+    parsed = start(b'L:\r\n')
+    tools.assert_equal(b'L:',        parsed[0].msg_type)
 
+def test_s_message():
+    parsed = start(b's:AAAiAAAAD8OAAAE=\r\n')
+    tools.assert_equal(parsed[0].msg_type   , b's:')
+    tools.assert_equal(parsed[0].rf_address , b'0fc380')
+    tools.assert_equal(parsed[0].room_id    , 0)
+    tools.assert_equal(parsed[0].temp       , OFF)
+    tools.assert_equal(parsed[0].temp_mode  , auto)
+
+    parsed = start(b's:AAARAAAAD8OAACshPQkHGAM=\r\n')
+    tools.assert_equal(parsed[0].msg_type   , b's:')
+    tools.assert_equal(parsed[0].rf_address , b'0fc380')
+    tools.assert_equal(parsed[0].room_id    , 0)
+    tools.assert_equal(parsed[0].temp       , 21.5)
+    tools.assert_equal(parsed[0].temp_mode  , auto)
+
+    parsed = start(b's:AAARAAAAD9rtACshPQkHGAM=\r\n')
+    tools.assert_equal(parsed[0].msg_type   , b's:')
+    tools.assert_equal(parsed[0].rf_address , b'0fdaed')
+    tools.assert_equal(parsed[0].room_id    , 0)
+    tools.assert_equal(parsed[0].temp       , 21.5)
+    tools.assert_equal(parsed[0].temp_mode  , auto)
+
+    parsed = start(b's:AAAgAAAAD8NzAA/a7QE=\r\n')
+    tools.assert_equal(parsed[0].msg_type   , b's:')
+    tools.assert_equal(parsed[0].rf_address , b'0fc373')
+    tools.assert_equal(parsed[0].room_id    , 0)
+    tools.assert_equal(parsed[0].temp       , 7.5)
+    tools.assert_equal(parsed[0].temp_mode  , auto)
+
+    parsed = start(b's:AAQQAAAAD8OAAQJASUxuQMtNIE0gTSBNIA==\r\n')
+    tools.assert_equal(parsed[0].msg_type   , b's:')
+    tools.assert_equal(parsed[0].rf_address , b'0fc380')
+    tools.assert_equal(parsed[0].room_id    , 1)
+    tools.assert_equal(parsed[0].temp       , OFF)
+    tools.assert_equal(parsed[0].temp_mode  , auto)
+    tools.assert_equal(parsed[0].unknown_base64  , b'n@\xcbM M M M ') # looks like weeklyprogramm
+    
 
 if __name__ == '__main__':
     test_l_message()

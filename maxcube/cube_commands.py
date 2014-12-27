@@ -3,23 +3,36 @@ from maxcube.message_fields import *
 
 import datetime
 
-# INCOMING_HELLO = "H:";
-# INCOMING_NTP_SERVER = "F:";
-# done: INCOMING_DEVICE_LIST = "L:";
-# done: INCOMING_CONFIGURATION = "C:";
-# done: INCOMING_METADATA = "M:";
-# INCOMING_NEW_DEVICE = "N:";
-# INCOMING_ACKNOWLEDGE = "A:";
-# INCOMING_ENCRYPTION = "E:";
-# INCOMING_DECRYPTION = "D:";
-# INCOMING_SET_CREDENTIALS = "b:";
-# INCOMING_GET_CREDENTIALS = "g:";
-# INCOMING_SET_REMOTEACCESS = "j:";
-# INCOMING_SET_USER_DATA = "p:";
-# INCOMING_GET_USER_DATA = "o:";
-# INCOMING_CHECK_PRODUCT_ACTIVATION = "v:";
-# INCOMING_ACTIVATE_PRODUCT = "w:";
-# INCOMING_SEND_DEVICE_CMD = "S:";
+# == DONE ==
+# INCOMING_HELLO = "H:"
+# INCOMING_DEVICE_LIST = "L:"
+# INCOMING_CONFIGURATION = "C:"
+# INCOMING_METADATA = "M:"
+
+# == TODO ==
+# INCOMING_NTP_SERVER = "F:"
+# INCOMING_NEW_DEVICE = "N:"
+  # example: 'N:AQ/DgExFUTExMzkwNTag\r\n' -> base64(b'\x01\x0f\xc3\x80LEQ1139056\xa0')
+  #                                                  | rf adress | ?? | serial | ?? |
+  #          'N:\r\n'
+  #          'N:AQ/Dc0xFUTExMzkwNjSg\r\n' -> base64(b'\x01\x0f\xc3sLEQ1139064\xa0')
+  #          'N:AQ/a7UxFUTExMzk2MjCg\r\n' -> base64(b'\x01\x0f\xda\xedLEQ1139620\xa0')
+# INCOMING_ACKNOWLEDGE = "A:"
+  # example: 'A:\r\n'
+# INCOMING_ENCRYPTION = "E:"
+# INCOMING_DECRYPTION = "D:"
+# INCOMING_SET_CREDENTIALS = "b:"
+# INCOMING_GET_CREDENTIALS = "g:"
+# INCOMING_SET_REMOTEACCESS = "j:"
+# INCOMING_SET_USER_DATA = "p:"
+# INCOMING_GET_USER_DATA = "o:"
+# INCOMING_CHECK_PRODUCT_ACTIVATION = "v:"
+# INCOMING_ACTIVATE_PRODUCT = "w:"
+# INCOMING_SEND_DEVICE_CMD = "S:"
+  # example: 'S:06,0,30\r\n'
+  #          'S:03,0,2d\r\n' (response to 's:AAQQAAAAD9rtAgRASUxuQMtNIE0gTSBNIA==\r\n')
+  #          'S:03,0,2a\r\n' (response to 's:AAQQAAAAD9rtAgZASUxuQMtNIE0gTSBNIA==\r\n')
+  #          'S:04,0,2b\r\n' (response to 's:AAQQAAAAD9rtAgBASUxuQMtNIE0gTSBNIA==\r\n')
 
 class H_Message(MessageTyp):
     def __init__(self):
@@ -102,7 +115,7 @@ class C_Message(MessageTyp):
 class M_Message(MessageTyp):
     def __init__(self):
         self.fields = [ffixed('msg_type', b'M:')   ,
-                       fcsv(                                            
+                       optional(fcsv(                                            
                             ffixed('index' , b'00'),                   
                             ffixed('count' , b'01'),
                             fbase64(                                    
@@ -121,7 +134,7 @@ class M_Message(MessageTyp):
                                              ffield('room_id'    ,   1, int)
                                             ),
                                    ffield('unknown3', 1, int)
-                                   )),
+                                   ))),
                        ffixed('_end', b'\r\n') ]
         MessageTyp.__init__(self)
 
@@ -129,7 +142,7 @@ class M_Message(MessageTyp):
 class L_Message(MessageTyp):
     def __init__(self):
         self.fields = [ffixed('msg_type', b'L:'),
-                       fbase64(
+                       optional(fbase64(
                                fmultiple('devices'                          , ALL,
                                       ffield('length'                       ,   1, int),
                                       ffield('rf_address'                   ,   3, bytes),
@@ -154,7 +167,7 @@ class L_Message(MessageTyp):
                                               ffield('temperature_setpoint',   1, temp),
                                               ffield('date_until'          ,   2, datetime.date),
                                               ffield('time_until'          ,   1, datetime.time)]
-                                              }))),
+                                              })))),
                        ffixed('_end', b'\r\n')]
         MessageTyp.__init__(self)
 
@@ -164,7 +177,7 @@ class S_Message(MessageTyp):
         self.fields = [ffixed('msg_type', b'S:'),
                        fcsv(
                            ffield('unknown' , ALL, str),
-                           ffield('unknown2', ALL, str),
+                           ffixed('not_used', b'0'),
                            ffield('unknown3', ALL, str)
                         ),
                        ffixed('_end', b'\r\n') ]

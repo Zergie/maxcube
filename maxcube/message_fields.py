@@ -22,12 +22,17 @@ def parse(field, data_already_parsed, raw_bytes):
     return field.parse(raw_bytes)
 
 
+def optional(field):
+    field.optional = True
+    return field
+
+
 class ffield(object): 
-    def __init__(self, name, length, type, optional=False):
+    def __init__(self, name, length, type):
         self.name     = name
         self.length   = length
         self.type     = type
-        self.optional = optional
+        self.optional = False
 
         decode_old, encode_old = (None, None)
         if 'decode' in dir(self): decode_old = self.decode
@@ -171,11 +176,12 @@ class ffield(object):
             day   = (byte_data[0] & 0b00111111)
             month = ((byte_data[0] & 0b11100000) >> 4) + ((byte_data[1] & 0b10000000) >> 7)
             year   = (byte_data[1] & 0b00011111)
-
-            if day == 0:
-                decoded_data = None # what does day=0 mean?
-            else:
+            
+            try:
                 decoded_data = datetime.date(2000 + year, month, day)
+            except:
+                print(list(byte_data), (2000 + year, month, day))
+                decoded_data = None # what does this mean?
         else:
             decoded_data = datetime.date(2000 + int(byte_data[0:2], 16), int(byte_data[2:4], 16), int(byte_data[4:6], 16))
         return byte_length, {self.name : decoded_data}
@@ -270,7 +276,8 @@ class ffixed(ffield):
 
 class fbase64(ffield):
     def __init__(self, *fields):
-        self.fields = fields
+        self.fields   = fields
+        self.optional = False
     def compile(self, compiled_dict):
         for obj in self.fields:
             obj.compile(compiled_dict)
@@ -278,27 +285,30 @@ class fbase64(ffield):
         msg = b''
         for obj in self.fields:
             msg += obj.compose(values)
-        print(msg)
         return base64.encodebytes(msg).replace(b'\n', b'')
     def parse(self, raw_bytes):
         decoded = base64.decodebytes(raw_bytes)
-        start = 0
-        data_decoded  = {}
 
-        for obj in self.fields:
-            parsed_length, parsed_data = parse(obj,  data_decoded, decoded[start:])
+        if self.optional and len(decoded) == 0:
+            return 0, {}
+        else:
+            start = 0
+            data_decoded  = {}
 
-            data_decoded.update(parsed_data)
-            start += parsed_length
+            for obj in self.fields:
+                parsed_length, parsed_data = parse(obj,  data_decoded, decoded[start:])
 
-            if start >= len(decoded):
-                break
+                data_decoded.update(parsed_data)
+                start += parsed_length
 
-        data_decoded['unknown_base64'] = decoded[start:]
-        if len(data_decoded['unknown_base64']) == 0:
-            del(data_decoded['unknown_base64'])
+                if start >= len(decoded):
+                    break
 
-        return len(raw_bytes), data_decoded
+            data_decoded['unknown_base64'] = decoded[start:]
+            if len(data_decoded['unknown_base64']) == 0:
+                del(data_decoded['unknown_base64'])
+
+            return len(raw_bytes), data_decoded
 
 
 class fmultiple(ffield):
@@ -372,7 +382,8 @@ class fchoose(ffield):
 
 class fcsv(ffield):
     def __init__(self, *fields):
-        self.fields = fields
+        self.fields   = fields
+        self.optional = False
     def compile(self, compiled_dict):
         for obj in self.fields:
             obj.compile(compiled_dict)
@@ -383,17 +394,20 @@ class fcsv(ffield):
         return msg[:-1]
     def parse(self, raw_bytes):
         parts   = raw_bytes.split(b',')
+        
+        if self.optional and len(parts) <= 1:
+            return 0, {}
+        else:
+            bytes_decoded = -1
+            data_decoded  = {}
+            for i in range(0, len(self.fields)):
+                obj = self.fields[i]
+                
+                count, data = parse(obj,  data_decoded, parts[i].strip())
 
-        bytes_decoded = -1
-        data_decoded  = {}
-        for i in range(0, len(self.fields)):
-            obj = self.fields[i]
-            
-            count, data = parse(obj,  data_decoded, parts[i].strip())
-
-            data_decoded.update(data)
-            bytes_decoded += len(parts[i]) + 1
-        return bytes_decoded, data_decoded
+                data_decoded.update(data)
+                bytes_decoded += len(parts[i]) + 1
+            return bytes_decoded, data_decoded
 
 
 
