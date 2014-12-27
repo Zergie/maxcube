@@ -29,49 +29,47 @@ class ffield(object):
         self.type     = type
         self.optional = optional
 
+        decode_old, encode_old = (None, None)
+        if 'decode' in dir(self): decode_old = self.decode
+        if 'encode' in dir(self): encode_old = self.encode
+
+        if self.type is str:
+            self.decode, self.encode = (self.decode_str           , self.encode_str)
+        elif self.type is int:
+            self.decode, self.encode = (self.decode_int           , self.encode_int)
+        elif self.type is temp:
+            self.decode, self.encode = (self.decode_temp          , self.encode_temp)
+        elif self.type is temp_offset:
+            self.decode, self.encode = (self.decode_temp_offset   , self.encode_temp_offset)
+        elif self.type is percent:
+            self.decode, self.encode = (self.decode_percent       , self.encode_percent)
+        elif self.type is bytes:
+            self.decode, self.encode = (self.decode_bytes         , self.encode_bytes)
+        elif self.type is datetime.date:
+            self.decode, self.encode = (self.decode_date          , self.encode_date)
+        elif self.type is datetime.time:
+            self.decode, self.encode = (self.decode_time          , self.encode_time)
+        elif self.type is weeklyprogram:
+            self.decode, self.encode = (self.decode_weeklyprogram , self.encode_weeklyprogram)
+
+        if decode_old != None: self.decode = decode_old
+        if encode_old != None: self.encode = encode_old
+
     def compile(self, compiled_dict):
         if self.type is temp:
             compiled_dict[self.name] = None
             compiled_dict[self.name + '_mode'] = None
         else:
             compiled_dict[self.name] = None
+
     def compose(self, values):
         if self.optional and not self.name in values:
             return b''
         elif self.optional and values[self.name] == None:
             return b''
-        elif self.type is str:
-            return str(values[self.name]).encode('utf-8')
-        elif self.type is temp:
-            value = int(values[self.name] * 2)
-            mode  = values[self.name + '_mode']
-
-            if mode == vacation:
-                value |= 0b10000000
-            elif mode == auto:
-                value |= 0b00000000
-            elif mode == manual:
-                value |= 0b01000000
-            elif mode == boost:
-                value |= 0b11000000
-            
-            return bytes([value])
-        elif self.type is bytes:
-            return binascii.unhexlify(values[self.name])
-        elif self.type is int:
-            return bytes([values[self.name]])
-        elif self.type is datetime.time:
-            value = int((values[self.name].hour * 60 + values[self.name].minute) / 30)
-            return bytes([value])
-        elif self.type is datetime.date:
-            value  = [0x00, 0x00]
-            value[0] |= (values[self.name].day & 0b00111111)
-            value[0] |= (values[self.name].month & 0b00000001) << 7
-            value[0] |= (values[self.name].month & 0b00001110) << 4
-            value[1] |= ((values[self.name].year - 2000) & 0b00011111)
-            return bytes(value)
         else:
-            return bytes(values[self.name])
+            return self.encode(values)
+
     def parse(self, raw_bytes):
         if self.length == ALL:
             ret = self.decode(raw_bytes, len(raw_bytes))
@@ -93,80 +91,130 @@ class ffield(object):
 
             ret = self.decode(byte_data, byte_length)
         return ret
-    def decode(self, byte_data, byte_length):
-        #print('name=', self.name, )
 
-        if self.type is str:
-            decoded_data = byte_data.decode()
-        elif self.type is int:
-            decoded_data = int.from_bytes(byte_data, byteorder='big')
-        elif self.type is temp:
-            value = int.from_bytes(byte_data, byteorder='big')
-            temperature = (value & 0b00111111) / 2
-            
-            if ((value & 0b11000000) == 0b10000000):
-                mode = vacation
-            elif ((value & 0b11000000) == 0b00000000):
-                mode = auto
-            elif ((value & 0b11000000) == 0b01000000):
-                mode = manual
-            elif ((value & 0b11000000) == 0b11000000):
-                mode = boost
 
-            if temperature >= 30.5:
-                temperature = ON
-            elif temperature <= 4.5:
-                temperature = OFF
+    def decode_str(self, byte_data, byte_length):
+        return byte_length, {self.name : byte_data.decode()}
+    def encode_str(self, values):
+        return str(values[self.name]).encode('utf-8')
 
-            return byte_length, { self.name           : temperature, 
-                                  self.name + '_mode' : mode}
-        elif self.type is temp_offset:
-            decoded_data = int.from_bytes(byte_data, byteorder='big') / 2 - 3.5
-        elif self.type is percent:
-            decoded_data = int.from_bytes(byte_data, byteorder='big') * (100 / 255)
-        elif self.type is bytes:
-            decoded_data = binascii.hexlify(byte_data)
-        elif self.type is datetime.date:
-            if byte_data == b'\x00\x00':
-                decoded_data = None
-            elif byte_length == 2:
-                day   = (byte_data[0] & 0b00111111)
-                month = ((byte_data[0] & 0b11100000) >> 4) + ((byte_data[1] & 0b10000000) >> 7)
-                year   = (byte_data[1] & 0b00011111)
+    def decode_int(self, byte_data, byte_length):
+        return byte_length, {self.name : int.from_bytes(byte_data, byteorder='big')}
+    def encode_int(self, values):
+        return bytes([values[self.name]])
 
-                if day == 0:
-                    decoded_data = None # what does day=0 mean?
-                else:
-                    decoded_data = datetime.date(2000 + year, month, day)
-            else:
-                decoded_data = datetime.date(2000 + int(byte_data[0:2], 16), int(byte_data[2:4], 16), int(byte_data[4:6], 16))
-        elif self.type is datetime.time:
-            if byte_data == b'\x00':
-                decoded_data = None
-            elif byte_length == 1:
-                decoded_data = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=byte_data[0]*30)).time()
-            else:
-                decoded_data = datetime.time(int(byte_data[0:2], 16), int(byte_data[2:4], 16))
-        elif self.type is weeklyprogram:
-            decoded_data = {}
 
-            for day in ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri']:
-                decodec_data_day = []
-                
-                for i in range(0, 13):
-                    pair  = byte_data[(i*2):(i*2)+2]
-
-                    temperature  = int((pair[0] >> 1) / 2)
-                    minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
-
-                    if minutes != 1440 and temperature != 17:
-                        time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
-                        decodec_data_day.append([temperature, time])
-
-                decoded_data[day] = decodec_data_day
+    def decode_temp(self, byte_data, byte_length):
+        value = int.from_bytes(byte_data, byteorder='big')
+        temperature = (value & 0b00111111) / 2
         
+        if ((value & 0b11000000) == 0b10000000):
+            mode = vacation
+        elif ((value & 0b11000000) == 0b00000000):
+            mode = auto
+        elif ((value & 0b11000000) == 0b01000000):
+            mode = manual
+        elif ((value & 0b11000000) == 0b11000000):
+            mode = boost
+
+        if temperature >= 30.5:
+            temperature = ON
+        elif temperature <= 4.5:
+            temperature = OFF
+
+        return byte_length, { self.name           : temperature, 
+                              self.name + '_mode' : mode}
+    def encode_temp(self, values):
+        value = int(values[self.name] * 2)
+        mode  = values[self.name + '_mode']
+
+        if mode == vacation:
+            value |= 0b10000000
+        elif mode == auto:
+            value |= 0b00000000
+        elif mode == manual:
+            value |= 0b01000000
+        elif mode == boost:
+            value |= 0b11000000
+        
+        return bytes([value])
+
+    def decode_temp_offset(self, byte_data, byte_length):
+        decoded_data = int.from_bytes(byte_data, byteorder='big') / 2 - 3.5
+        return byte_length, {self.name : decoded_data}
+    def encode_temp_offset(self, values):
+        value = int(values[self.name] * 2 - 3.5)
+        return bytes([value])
+
+    def decode_percent(self, byte_data, byte_length):
+        decoded_data = int.from_bytes(byte_data, byteorder='big') * (100 / 255)
+        return byte_length, {self.name : decoded_data}
+    def encode_percent(self, values):
+        value = int(values[self.name] * (255 / 100))
+        return bytes([value])
+
+    def decode_bytes(self, byte_data, byte_length):
+        return byte_length, {self.name : binascii.hexlify(byte_data)}
+    def encode_bytes(self, values):
+        return binascii.unhexlify(values[self.name])
+
+    def decode_date(self, byte_data, byte_length):
+        if byte_data == b'\x00\x00':
+            decoded_data = None
+        elif byte_length == 2:
+            day   = (byte_data[0] & 0b00111111)
+            month = ((byte_data[0] & 0b11100000) >> 4) + ((byte_data[1] & 0b10000000) >> 7)
+            year   = (byte_data[1] & 0b00011111)
+
+            if day == 0:
+                decoded_data = None # what does day=0 mean?
+            else:
+                decoded_data = datetime.date(2000 + year, month, day)
+        else:
+            decoded_data = datetime.date(2000 + int(byte_data[0:2], 16), int(byte_data[2:4], 16), int(byte_data[4:6], 16))
+        return byte_length, {self.name : decoded_data}
+    def encode_date(self, values):
+        value  = [0x00, 0x00]
+        value[0] |= (values[self.name].day & 0b00111111)
+        value[0] |= (values[self.name].month & 0b00000001) << 7
+        value[0] |= (values[self.name].month & 0b00001110) << 4
+        value[1] |= ((values[self.name].year - 2000) & 0b00011111)
+        return bytes(value)
+
+    def decode_time(self, byte_data, byte_length):
+        if byte_data == b'\x00':
+            decoded_data = None
+        elif byte_length == 1:
+            decoded_data = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=byte_data[0]*30)).time()
+        else:
+            decoded_data = datetime.time(int(byte_data[0:2], 16), int(byte_data[2:4], 16))
+        return byte_length, {self.name : decoded_data}
+    def encode_time(self, values):
+        value = int((values[self.name].hour * 60 + values[self.name].minute) / 30)
+        return bytes([value])
+
+    def decode_weeklyprogram(self, byte_data, byte_length):
+        decoded_data = {}
+
+        for day in ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri']:
+            decodec_data_day = []
+            
+            for i in range(0, 13):
+                pair  = byte_data[(i*2):(i*2)+2]
+
+                temperature  = int((pair[0] >> 1) / 2)
+                minutes = (((pair[0] & 0x01) << 8) | pair[1]) * 5
+
+                if minutes != 1440 and temperature != 17:
+                    time = (datetime.datetime(2000,1,1) + datetime.timedelta(minutes=minutes)).time()
+                    decodec_data_day.append([temperature, time])
+
+            decoded_data[day] = decodec_data_day
+    
         #pprint(decoded_data)
         return byte_length, {self.name : decoded_data}
+    def encode_weeklyprogram(self, values):
+        pass # todo
 
 
 class fflags(ffield):
