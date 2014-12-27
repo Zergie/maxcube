@@ -34,21 +34,21 @@ from maxcube.message_fields import *
 # OUTGOING_SEND_WAKEUP = "z:";
 
 class l_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'l:'),
-                       ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
+                       ffixed('_end', b'\r\n') ]
+        MessageTyp.__init__(self)
 
 
 class q_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'q:'),
-                       ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
+                       ffixed('_end', b'\r\n') ]
+        MessageTyp.__init__(self)
 
 
 class s_Message(MessageTyp):
-   def __init__(self, raw_bytes):
+   def __init__(self):
         self.fields = [ffixed('msg_type', b's:'),
                        fbase64(
                                ffixed('magic', [0x00, 0x04, 0x40, 0x00, 0x00, 0x00]),
@@ -57,13 +57,14 @@ class s_Message(MessageTyp):
                                ffield('temp'       ,   1, temp),
                                ffield('date_until' ,   2, datetime.date, True),
                                ffield('time_until' ,   1, datetime.time, True)),
-                       ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
+                       ffixed('_end', b'\r\n') ]
+        MessageTyp.__init__(self)
+
 
 class c_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'c:'),
                        ffield('rf_address', 6, str),
-                       ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)    
+                       ffixed('_end', b'\r\n') ]    
+        MessageTyp.__init__(self)
 

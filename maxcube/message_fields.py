@@ -12,8 +12,7 @@ class temp(object):        __slots__ = ()
 class temp_offset(object): __slots__ = ()
 class percent(object):     __slots__ = ()
 
-class weeklyprogram(object):
-     __slots__ = ()
+class weeklyprogram(object): __slots__ = ()
 
 class PropertyContainer(object): pass
 
@@ -30,6 +29,39 @@ class ffield(object):
         self.type     = type
         self.optional = optional
 
+    def compile(self, compiled_dict):
+        if self.type is temp:
+            compiled_dict[self.name] = None
+            compiled_dict[self.name + '_mode'] = None
+        else:
+            compiled_dict[self.name] = None
+    def compose(self, values):
+        if self.optional and not self.name in values:
+            return b''
+        elif self.optional and values[self.name] == None:
+            return b''
+        elif self.type is str:
+            return str(values[self.name]).encode('utf-8')
+        elif self.type is temp:
+            value = int(values[self.name] * 2)
+            mode  = values[self.name + '_mode']
+
+            if mode == vacation:
+                value = value or 0b10000000            
+            elif mode == auto:
+                value = value or 0b00000000
+            elif mode == manual:
+                value = value or 0b01000000
+            elif mode == boost:
+                value = value or 0b11000000
+
+            return bytes([value])
+        elif self.type is bytes:
+            return binascii.unhexlify(values[self.name])
+        elif self.type is int:
+            return bytes([values[self.name]])
+        else:
+            return bytes(values[self.name])
     def parse(self, raw_bytes):
         if self.length == ALL:
             ret = self.decode(raw_bytes, len(raw_bytes))
@@ -51,7 +83,6 @@ class ffield(object):
 
             ret = self.decode(byte_data, byte_length)
         return ret
-
     def decode(self, byte_data, byte_length):
         #print('name=', self.name, )
 
@@ -84,18 +115,11 @@ class ffield(object):
         elif self.type is percent:
             decoded_data = int.from_bytes(byte_data, byteorder='big') * (100 / 255)
         elif self.type is bytes:
-            decoded_data = binascii.b2a_hex(byte_data)
+            decoded_data = binascii.hexlify(byte_data)
         elif self.type is datetime.date:
             if byte_data == b'\x00\x00':
                 decoded_data = None
             elif byte_length == 2:
-                # 10011101 00001011
-                # MMMDDDDD M YYYYYY
-                #          00111111 = 001011 => 2000 + 11 = 2011 (year)
-                # 11100000          
-                #          10000000 = 1000   => 8  (month)
-                # 00011111          = 11101  => 29 (day)
-
                 day   = (byte_data[0] & 0b00111111)
                 month = ((byte_data[0] & 0b11100000) >> 4) + ((byte_data[1] & 0b10000000) >> 7)
                 year   = (byte_data[1] & 0b00011111)
@@ -137,7 +161,6 @@ class ffield(object):
 
 class fflags(ffield):
     def __init__(self, *fields):
-        # name, mask , {0 : ok, 1 : not ok}
         self.fields = fields
     def parse(self, raw_bytes):
         data_decoded  = {}
@@ -164,13 +187,25 @@ class ffixed(ffield):
             ffield.__init__(self, name, 1, type(fixed_data))
         else:
             ffield.__init__(self, name, len(fixed_data), type(fixed_data))
+    def compile(self, compiled_dict):
+        pass
+    def compose(self, values):
+        return bytes(self.fixed_data)
     def decode(self, byte_data, byte_length):
         return byte_length, {self.name : self.fixed_data}
 
 
-class fbase64(object):
+class fbase64(ffield):
     def __init__(self, *fields):
         self.fields = fields
+    def compile(self, compiled_dict):
+        for obj in self.fields:
+            obj.compile(compiled_dict)
+    def compose(self, values):
+        msg = b''
+        for obj in self.fields:
+            msg += obj.compose(values)
+        return base64.encodebytes(msg).replace(b'\n', b'')
     def parse(self, raw_bytes):
         decoded = base64.decodebytes(raw_bytes)
         start = 0
@@ -194,12 +229,11 @@ class fbase64(object):
         return len(raw_bytes), data_decoded
 
 
-class fmultiple(object):
+class fmultiple(ffield):
     def __init__(self, name, count, *fields):
         self.name   = name
         self.count = count
         self.fields = fields
-
     def parse(self, raw_bytes):
         if self.count == VL:
             count = int(raw_bytes[0])
@@ -208,9 +242,7 @@ class fmultiple(object):
             ret = self.decode(0, raw_bytes, 999)
         else:
             ret = self.decode(1, raw_bytes, self.count)
-
         return ret
-
     def decode(self, start, byte_data, count):
         items = []
 
@@ -228,7 +260,7 @@ class fmultiple(object):
         return start, {self.name : items}
 
 
-class fchoose(object):
+class fchoose(ffield):
     def __init__(self, name, decision_dict):
         self.name          = name
         self.decision_dict = decision_dict
@@ -247,7 +279,7 @@ class fchoose(object):
         return start, data_decoded
 
 
-class fcsv(object):
+class fcsv(ffield):
     def __init__(self, *fields):
         self.fields = fields
     def parse(self, raw_bytes):
@@ -266,12 +298,23 @@ class fcsv(object):
 
 
 
-class MessageTyp(object): 
-    def __init__(self, raw_bytes=None):
-        if raw_bytes != None:
-            self._parse(raw_bytes)
+class MessageTyp(object):
+    def __init__(self):
+        pass
 
-    def _parse(self, raw_bytes):
+    def compile(self):
+        ret = {}
+        for obj in self.fields:
+            obj.compile(ret)
+        return ret
+
+    def compose(self, values={}):
+        msg = b''
+        for obj in self.fields:
+            msg += obj.compose(values)
+        return msg
+
+    def parse(self, raw_bytes):
         start = 0
 
         for obj in self.fields:

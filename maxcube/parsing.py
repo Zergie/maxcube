@@ -20,7 +20,8 @@ def handle_output(line):
             break
 
     if cls != None:
-        message = c(line)
+        message = c()
+        message.parse(line)
         return message
     else:
         return None

@@ -22,7 +22,7 @@ import datetime
 # INCOMING_SEND_DEVICE_CMD = "S:";
 
 class H_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'H:')   ,
                        fcsv(
                             ffield('serial'            , ALL, str),
@@ -38,12 +38,11 @@ class H_Message(MessageTyp):
                             ffield('unknown2'          , ALL, str)
                             ),
                        ffixed('_end', b'\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
-
+        MessageTyp.__init__(self)
 
 
 class C_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'C:')   ,
                        fcsv(
                             ffield('rf_address_2', ALL, str),
@@ -96,13 +95,12 @@ class C_Message(MessageTyp):
                                            4 : [],
                                            5 : []
                                             }))),
-                       ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
-
+                       ffixed('_end', b'\r\n') ]
+        MessageTyp.__init__(self)
 
 
 class M_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'M:')   ,
                        fcsv(                                            
                             ffixed('index' , '00'),                   
@@ -125,11 +123,11 @@ class M_Message(MessageTyp):
                                    ffield('unknown3', ALL, int)
                                    )),
                        ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
+        MessageTyp.__init__(self)
 
 
 class L_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'L:'),
                        fbase64(
                                fmultiple('devices'                          , ALL,
@@ -157,16 +155,18 @@ class L_Message(MessageTyp):
                                               ffield('date_until'          ,   2, datetime.date),
                                               ffield('time_until'          ,   1, datetime.time)]
                                               }))),
-                       ffixed('_end', '\r\n')]
-        MessageTyp.__init__(self, raw_bytes)
+                       ffixed('_end', b'\r\n')]
+        MessageTyp.__init__(self)
+
 
 class S_Message(MessageTyp):
-    def __init__(self, raw_bytes):
+    def __init__(self):
         self.fields = [ffixed('msg_type', b'S:'),
                        fcsv(
                            ffield('unknown' , ALL, str),
                            ffield('unknown2', ALL, str),
                            ffield('unknown3', ALL, str)
                         ),
-                       ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)
+                       ffixed('_end', b'\r\n') ]
+        MessageTyp.__init__(self)
+

@@ -8,21 +8,29 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.par
 
 import datetime
 
-from maxcube import composing
+from maxcube.client_commands import *
 
-def test_compiling():
-	tools.assert_equal([0x00, 0x04, 0x40, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0x80, 0x02, 0x3d],
-						composing.compile_s(b'0fc380', 2, 30, 1, None, None))
+def test_simple():
+	composed = l_Message().compose()
+	tools.assert_equal(composed, b'l:\r\n')
 
-def test_composing():
-	tools.assert_equal(b's:AARAAAAAAP4wAaiLix8=\r\n',
-						composing.compose_s(b'00fe30', 1, 20, 2, datetime.date(2011, 9, 11), datetime.time(15, 30)))
+	composed = q_Message().compose()
+	tools.assert_equal(composed, b'q:\r\n')
 
-	tools.assert_equal([0x00, 0x04, 0x40, 0x00, 0x00, 0x00, 0x00, 0xFE, 0x30, 0x01, 0x00],
-						composing.compile_s(b'00fe30', 1, 0, 0, None, None))
+def test_c_message():
+	values   = {'rf_address' : '0fc380'}
+	composed = c_Message().compose(values)
+	tools.assert_equal(composed, b'c:0fc380\r\n')
 
-	tools.assert_equal(b's:AARAAAAAAP4wAQA=\r\n',
-						composing.compose_s(b'00fe30', 1, 0, 0, None, None))
-
-	tools.assert_equal([0x00, 0x04, 0x40, 0x00, 0x00, 0x00, 0x00, 0xFE, 0x30, 0x01, 0x6C],
-						composing.compile_s(b'00fe30', 1, 22, 1, None, None))
+def test_s_message():
+	values   = {'rf_address' : b'0fc380',
+				'room_id'    : 2,
+				'temp'       : 20.0,
+				'temp_mode'  : auto,
+				'date_until' : None,
+				'time_until' : None
+				}
+	composed = s_Message().compose(values)
+	tools.assert_equal(composed, b's:AARAAAAAD8OAAig=\r\n')	
+	# b'\x00\x04@\x00\x00\x00\x0f\xc3\x80\x02('
+    # b'\x00\x04@\x00\x00\x00\x0f\xc3\x80\x02(\x00\x00\x00'

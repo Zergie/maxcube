@@ -27,6 +27,7 @@ def main():
 	elif message[0].msg_type == b's:' or message[0].msg_type == b'S:' :
 		f = open('log.txt', 'a')
 		#f.write(message[0].__dict__ + '\n')
+		f.write(repr(sys.argv[1]) + '\n')
 		pprint(message[0].__dict__, f)
 		f.close()
 
