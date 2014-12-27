@@ -105,8 +105,8 @@ class M_Message(MessageTyp):
     def __init__(self, raw_bytes):
         self.fields = [ffixed('msg_type', b'M:')   ,
                        fcsv(                                            
-                            ffixed('unknown' , '00'),                   
-                            ffixed('unknown2', '01'),
+                            ffixed('index' , '00'),                   
+                            ffixed('count' , '01'),
                             fbase64(                                    
                                    ffixed('magicbyte', 0x56          ), 
                                    ffixed('version'  , 0x02          ),
