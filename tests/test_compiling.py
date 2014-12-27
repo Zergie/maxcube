@@ -32,6 +32,8 @@ def test_s_Message():
 								  'temp_mode' : None,
 								  'date_until': None,
 								  'time_until': None})
+
+
 def test_H_Message():
 	compiled = H_Message().compile()
 	tools.assert_equal(compiled, {'rf_address'         : None,
@@ -45,3 +47,16 @@ def test_H_Message():
 								  'http_connection_id' : None,
 								  'cube_date'          : None,
 								  'cube_time'          : None})
+
+
+def test_M_Message():
+	compiled = M_Message().compile()
+	tools.assert_equal(compiled, {'rooms'           : [{'id'         : None,
+														'name'       : None,
+														'rf_address' : None}],
+									'devices'       : [{'type'       : None,
+														'rf_address' : None,
+														'serial'     : None,
+														'name'       : None,
+														'room_id'    : None}],
+									'unknown3'      : None})

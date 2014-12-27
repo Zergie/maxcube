@@ -56,6 +56,7 @@ def test_s_Message():
 	composed = s_Message().compose(values)
 	tools.assert_equal(composed, b's:AARAAAAAD8OAAq7bDik=\r\n')
 
+
 def test_H_Message():
 	values   = {'rf_address'         : '03f6c9',
 				'serial'             : 'JEQ0543545',
@@ -71,6 +72,32 @@ def test_H_Message():
 				}
 	composed = H_Message().compose(values)
 	tools.assert_equal(composed, b'H:JEQ0543545,03f6c9,0113,00000000,4f001e1b,00,32,0d0c1d,1013,03,0000\r\n')
-# b'H:JEQ0543545,03f6c9,0113,00000000,4f001e1b,00,32,\\xdd\\r, ,03,0000\\r\\n'
-# b'H:JEQ0543545,03f6c9,0113,00000000,4f001e1b,00,32,0d0c1d,1013,03,0000\\r\\n'
+
+
+def test_M_Message():
+	values   = {'rooms'           : [{'id'         : 2,
+									  'name'       : 'Obyvaci pokoj',
+									  'rf_address' : b'08b6d2'},
+									 {'id'         : 1,
+									  'name'       : 'Predsin',
+									  'rf_address' : b'0b04be'}],
+				'devices'         : [{'type'       : 2,
+				 					  'rf_address' : b'0b04be',
+				 					  'serial'     : 'KEQ0571674',
+				 					  'name'       : 'topeni u wc',
+				 					  'room_id'    : 1},
+				 					 {'type'       : 2,
+				 					  'rf_address' : b'08b6d2',
+				 					  'serial'     : 'KEQ0634607',
+				 					  'name'       : 'Pod oknem',
+				 					  'room_id'    : 2},
+				 					 {'type'       : 5,
+				 					  'rf_address' : b'01b491',
+				 					  'serial'     : 'JEQ0305205',
+				 					  'name'       : 'Eco Switch',
+				 					  'room_id'    : 0}],
+				'unknown3'        : 1}
+	composed = M_Message().compose(values)
+	tools.assert_equal(composed, b'M:00,01,VgICAg1PYnl2YWNpIHBva29qCLbSAQdQcmVkc2luCwS+AwILBL5LRVEwNTcxNjc0C3RvcGVuaSB1IHdjAQIIttJLRVEwNjM0NjA3CVBvZCBva25lbQIFAbSRSkVRMDMwNTIwNQpFY28gU3dpdGNoAAE=\r\n')
+
 

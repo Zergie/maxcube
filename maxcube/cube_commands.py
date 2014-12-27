@@ -103,8 +103,8 @@ class M_Message(MessageTyp):
     def __init__(self):
         self.fields = [ffixed('msg_type', b'M:')   ,
                        fcsv(                                            
-                            ffixed('index' , '00'),                   
-                            ffixed('count' , '01'),
+                            ffixed('index' , b'00'),                   
+                            ffixed('count' , b'01'),
                             fbase64(                                    
                                    ffixed('magicbyte', 0x56          ), 
                                    ffixed('version'  , 0x02          ),
@@ -120,9 +120,9 @@ class M_Message(MessageTyp):
                                              ffield('name'       ,  VL, str),
                                              ffield('room_id'    ,   1, int)
                                             ),
-                                   ffield('unknown3', ALL, int)
+                                   ffield('unknown3', 1, int)
                                    )),
-                       ffixed('_end', '\r\n') ]
+                       ffixed('_end', b'\r\n') ]
         MessageTyp.__init__(self)
 
 

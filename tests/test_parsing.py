@@ -50,8 +50,8 @@ def test_h_message():
 def test_m_message():
     parsed = start(b'M:00,01,VgICAg1PYnl2YWNpIHBva29qCLbSAQdQcmVkc2luCwS+AwILBL5LRVEwNTcxNjc0C3RvcGVuaSB1IHdjAQIIttJLRVEwNjM0NjA3CVBvZCBva25lbQIFAbSRSkVRMDMwNTIwNQpFY28gU3dpdGNoAAE=\r\n')
     tools.assert_equal(b'M:',        parsed[0].msg_type)
-    tools.assert_equal('00',         parsed[0].index)
-    tools.assert_equal('01',         parsed[0].count)
+    tools.assert_equal(b'00',        parsed[0].index)
+    tools.assert_equal(b'01',        parsed[0].count)
     tools.assert_equal(2,            parsed[0].version)
     tools.assert_equal(86,           parsed[0].magicbyte)
     tools.assert_equal(1,            parsed[0].unknown3)

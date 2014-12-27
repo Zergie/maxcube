@@ -68,7 +68,13 @@ class ffield(object):
         elif self.optional and values[self.name] == None:
             return b''
         else:
-            return self.encode(values)
+            msg = self.encode(values)
+            if self.length == T0:
+                return msg + bytes([0x00])
+            elif self.length == VL:
+                return bytes([len(msg)]) + msg
+            else:
+                return msg
 
     def parse(self, raw_bytes):
         if self.length == ALL:
@@ -218,7 +224,6 @@ class ffield(object):
 
             decoded_data[day] = decodec_data_day
     
-        #pprint(decoded_data)
         return byte_length, {self.name : decoded_data}
     def encode_weeklyprogram(self, values):
         pass # todo
@@ -255,7 +260,10 @@ class ffixed(ffield):
     def compile(self, compiled_dict):
         pass
     def compose(self, values):
-        return bytes(self.fixed_data)
+        if isinstance(self.fixed_data, int):
+            return bytes([self.fixed_data])
+        else:
+            return bytes(self.fixed_data)
     def decode(self, byte_data, byte_length):
         return byte_length, {self.name : self.fixed_data}
 
@@ -270,6 +278,7 @@ class fbase64(ffield):
         msg = b''
         for obj in self.fields:
             msg += obj.compose(values)
+        print(msg)
         return base64.encodebytes(msg).replace(b'\n', b'')
     def parse(self, raw_bytes):
         decoded = base64.decodebytes(raw_bytes)
@@ -288,8 +297,6 @@ class fbase64(ffield):
         data_decoded['unknown_base64'] = decoded[start:]
         if len(data_decoded['unknown_base64']) == 0:
             del(data_decoded['unknown_base64'])
-        #else:
-        #    print('unknown_base64=', data_decoded['unknown_base64'])
 
         return len(raw_bytes), data_decoded
 
@@ -297,8 +304,27 @@ class fbase64(ffield):
 class fmultiple(ffield):
     def __init__(self, name, count, *fields):
         self.name   = name
-        self.count = count
+        self.count  = count
         self.fields = fields
+    def compile(self, compiled_dict):
+        count = 1 if self.count in (ALL, VL) else self.count
+        
+        ret_list = []
+        for i in range(0, count):
+            ret = {}
+            for obj in self.fields:
+                obj.compile(ret)
+            ret_list.append(ret)
+        compiled_dict[self.name] = ret_list
+    def compose(self, values):
+        if self.count == VL:
+            msg = bytes([len(values[self.name])])
+        else:
+            msg = b''
+        for i in values[self.name]:
+            for obj in self.fields:
+                msg += obj.compose(i)
+        return msg
     def parse(self, raw_bytes):
         if self.count == VL:
             count = int(raw_bytes[0])
@@ -402,8 +428,6 @@ class MessageTyp(object):
         self.unknown_raw = raw_bytes[start:]
         if len(self.unknown_raw) == 0:
             del(self.unknown_raw)
-        #else:
-        #    print('unknown_raw=', self.unknown_raw)
 
         # cleanup __dict__
         del(self.fields)
