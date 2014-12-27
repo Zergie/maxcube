@@ -92,7 +92,7 @@ class ffield(object):
             decoded_data = int.from_bytes(byte_data, byteorder='big')
         elif self.type is temp:
             value = int.from_bytes(byte_data, byteorder='big')
-            temperature = (value & 0b01111111) / 2
+            temperature = (value & 0b00111111) / 2
             
             if ((value & 0b11000000) == 0b10000000):
                 mode = vacation
