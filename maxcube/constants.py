@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 
-# consts for parsing
-VL  = object() # variable length (length found in first bit)
-ALL = object() # no length restriction
-T0  = object() # decode until 0x00
+class Constant(object):
+	def __init__(self, text):
+		self.text = text
+		globals()[text] = self
+	def __repr__(self):
+		return 'CONST ' + self.text
 
+
+# consts for parsing
+Constant('VL')  # variable length (length found in first bit)
+Constant('ALL') # no length restriction
+Constant('T0')  # decode until 0x00
 
 # temperature values
-ON  = object()
-OFF = object()
+Constant('ON')
+Constant('OFF')
 
 # temperature modes
-auto     = object()
-manual   = object()
-vacation = object()
-boost    = object()
+Constant('auto')
+Constant('manual')
+Constant('vacation')
+Constant('boost')
