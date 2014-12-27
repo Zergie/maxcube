@@ -174,12 +174,16 @@ class ffield(object):
             decoded_data = datetime.date(2000 + int(byte_data[0:2], 16), int(byte_data[2:4], 16), int(byte_data[4:6], 16))
         return byte_length, {self.name : decoded_data}
     def encode_date(self, values):
-        value  = [0x00, 0x00]
-        value[0] |= (values[self.name].day & 0b00111111)
-        value[0] |= (values[self.name].month & 0b00000001) << 7
-        value[0] |= (values[self.name].month & 0b00001110) << 4
-        value[1] |= ((values[self.name].year - 2000) & 0b00011111)
-        return bytes(value)
+        if self.length == 2:
+            value  = [0x00, 0x00]
+            value[0] |= (values[self.name].day & 0b00111111)
+            value[0] |= (values[self.name].month & 0b00000001) << 7
+            value[0] |= (values[self.name].month & 0b00001110) << 4
+            value[1] |= ((values[self.name].year - 2000) & 0b00011111)
+            return bytes(value)
+        else:
+            return binascii.hexlify(bytes([values[self.name].year - 2000, values[self.name].month, values[self.name].day]))
+        
 
     def decode_time(self, byte_data, byte_length):
         if byte_data == b'\x00':
@@ -190,8 +194,11 @@ class ffield(object):
             decoded_data = datetime.time(int(byte_data[0:2], 16), int(byte_data[2:4], 16))
         return byte_length, {self.name : decoded_data}
     def encode_time(self, values):
-        value = int((values[self.name].hour * 60 + values[self.name].minute) / 30)
-        return bytes([value])
+        if self.length == 1:
+            value = int((values[self.name].hour * 60 + values[self.name].minute) / 30)
+            return bytes([value])
+        else:
+            return binascii.hexlify(bytes([values[self.name].hour, values[self.name].minute]))
 
     def decode_weeklyprogram(self, byte_data, byte_length):
         decoded_data = {}
@@ -340,6 +347,14 @@ class fchoose(ffield):
 class fcsv(ffield):
     def __init__(self, *fields):
         self.fields = fields
+    def compile(self, compiled_dict):
+        for obj in self.fields:
+            obj.compile(compiled_dict)
+    def compose(self, values):
+        msg = b''
+        for obj in self.fields:
+            msg += obj.compose(values) + b','
+        return msg[:-1]
     def parse(self, raw_bytes):
         parts   = raw_bytes.split(b',')
 
