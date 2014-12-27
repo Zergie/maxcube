@@ -47,14 +47,14 @@ class ffield(object):
             mode  = values[self.name + '_mode']
 
             if mode == vacation:
-                value = value or 0b10000000            
+                value |= 0b10000000
             elif mode == auto:
-                value = value or 0b00000000
+                value |= 0b00000000
             elif mode == manual:
-                value = value or 0b01000000
+                value |= 0b01000000
             elif mode == boost:
-                value = value or 0b11000000
-
+                value |= 0b11000000
+            
             return bytes([value])
         elif self.type is bytes:
             return binascii.unhexlify(values[self.name])

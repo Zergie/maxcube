@@ -10,6 +10,7 @@ import datetime
 
 from maxcube.client_commands import *
 
+
 def test_simple():
 	composed = l_Message().compose()
 	tools.assert_equal(composed, b'l:\r\n')
@@ -17,10 +18,12 @@ def test_simple():
 	composed = q_Message().compose()
 	tools.assert_equal(composed, b'q:\r\n')
 
+
 def test_c_message():
 	values   = {'rf_address' : '0fc380'}
 	composed = c_Message().compose(values)
 	tools.assert_equal(composed, b'c:0fc380\r\n')
+
 
 def test_s_message():
 	values   = {'rf_address' : b'0fc380',
@@ -31,6 +34,14 @@ def test_s_message():
 				'time_until' : None
 				}
 	composed = s_Message().compose(values)
-	tools.assert_equal(composed, b's:AARAAAAAD8OAAig=\r\n')	
-	# b'\x00\x04@\x00\x00\x00\x0f\xc3\x80\x02('
-    # b'\x00\x04@\x00\x00\x00\x0f\xc3\x80\x02(\x00\x00\x00'
+	tools.assert_equal(composed, b's:AARAAAAAD8OAAig=\r\n')
+
+	values   = {'rf_address' : b'0fc380',
+				'room_id'    : 2,
+				'temp'       : 22.0,
+				'temp_mode'  : manual,
+				'date_until' : None,
+				'time_until' : None
+				}
+	composed = s_Message().compose(values)
+	tools.assert_equal(composed, b's:AARAAAAAD8OAAmw=\r\n')
