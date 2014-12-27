@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 from maxcube.message_fields import *
 
+# == DONE ==
+# OUTGOING_SEND = "s:";
+# OUTGOING_QUIT = "q:";
+# OUTGOING_GET_DEVICE_LIST = "l:";
+# OUTGOING_GET_CONFIGURATION = "c:";
+
+# == TODO ==
 # OUTGOING_URL = "u:";
 # OUTGOING_INTERVAL = "i:";
-# done: OUTGOING_SEND = "s:";
 # OUTGOING_METADATA = "m:";
 # OUTGOING_INCLUSION_MODE = "n:";
 # OUTGOING_CANCEL_INCLUSION_MODE = "x:";
 # OUTGOING_MORE_DATA = "g:";
-# OUTGOING_QUIT = "q:";
 # OUTGOING_ENCRYPTION = "e:";
 # OUTGOING_DECRYPTION = "d:";
 # OUTGOING_SET_CREDENTIALS = "B:";
@@ -23,9 +28,7 @@ from maxcube.message_fields import *
 # OUTGOING_RESET_ERROR = "r:";
 # OUTGOING_DELETE_DEVICES = "t:";
 # OUTGOING_SET_PUSHBUTTON_CONFIG = "w:";
-# done: OUTGOING_GET_DEVICE_LIST = "l:";
 # OUTGOING_SET_URL = "u:";
-# done: OUTGOING_GET_CONFIGURATION = "c:";
 # OUTGOING_TIME_CONFIG = "v:";
 # OUTGOING_NTP_SERVER = "f:";
 # OUTGOING_SEND_WAKEUP = "z:";
@@ -34,7 +37,14 @@ class l_Message(MessageTyp):
     def __init__(self, raw_bytes):
         self.fields = [ffixed('msg_type', b'l:'),
                        ffixed('_end', '\r\n') ]
-        MessageTyp.__init__(self, raw_bytes)    
+        MessageTyp.__init__(self, raw_bytes)
+
+
+class q_Message(MessageTyp):
+    def __init__(self, raw_bytes):
+        self.fields = [ffixed('msg_type', b'q:'),
+                       ffixed('_end', '\r\n') ]
+        MessageTyp.__init__(self, raw_bytes)
 
 
 class s_Message(MessageTyp):
