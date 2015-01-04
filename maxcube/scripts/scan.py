@@ -17,13 +17,13 @@ from maxcube import objects
 def main():	
 	print("searching maxcube(s)..")
 
-	for tcp_addr, tcp_port in network.discover_cubes(limit = 1):
+	for tcp_addr, tcp_port in network.discover_cubes(limit = 1, serial='KEQ1069215'):
 		print('')
 		print('Cube:', tcp_addr, tcp_port)
 		
 		cube = objects.MaxCube(tcp_addr, tcp_port)
 		cube.connect()
-		output.display(cube)			
+		print(cube)			
 		cube.close()
 	
 if __name__ == '__main__':

@@ -30,8 +30,8 @@ def write_raw_data(host, port, data):
     return got
 
 
-def discover_cubes(limit=99):
-    HelloMessage =  bytes([0x65, 0x51, 0x33, 0x4d, 0x61, 0x78, 0x2a, 0x00, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x49]);
+def discover_cubes(limit=99, serial="**********"):
+    HelloMessage =  b'eQ3Max*\x00' + serial.encode('ascii') + b'I';
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
     sock.bind(('', 23272))
