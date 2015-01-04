@@ -176,9 +176,9 @@ class S_Message(MessageTyp):
     def __init__(self):
         self.fields = [ffixed('msg_type', b'S:'),
                        fcsv(
-                           ffield('unknown' , ALL, str),
-                           ffixed('not_used', b'0'),
-                           ffield('unknown3', ALL, str)
+                           ffield('duty_cycle'       , ALL, int),
+                           ffield('command_discarded', ALL, int),
+                           ffield('free_memory_slots', ALL, int)
                         ),
                        ffixed('_end', b'\r\n') ]
         MessageTyp.__init__(self)
