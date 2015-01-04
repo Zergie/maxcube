@@ -60,13 +60,6 @@ class ffield(object):
         if decode_old != None: self.decode = decode_old
         if encode_old != None: self.encode = encode_old
 
-    def compile(self, compiled_dict):
-        if self.type is temp:
-            compiled_dict[self.name] = None
-            compiled_dict[self.name + '_mode'] = None
-        else:
-            compiled_dict[self.name] = None
-
     def compose(self, values):
         if self.optional and not self.name in values:
             return b''
@@ -74,9 +67,14 @@ class ffield(object):
             return b''
         else:
             msg = self.encode(values)
-            if self.length == T0:
+            try:
+                length = self.length
+            except:
+                length = None
+
+            if length == T0:
                 return msg + bytes([0x00])
-            elif self.length == VL:
+            elif length == VL:
                 return bytes([len(msg)]) + msg
             else:
                 return msg
@@ -114,39 +112,34 @@ class ffield(object):
     def encode_int(self, values):
         return bytes([values[self.name]])
 
-
     def decode_temp(self, byte_data, byte_length):
         value = int.from_bytes(byte_data, byteorder='big')
         temperature = (value & 0b00111111) / 2
         
-        if ((value & 0b11000000) == 0b10000000):
-            mode = vacation
-        elif ((value & 0b11000000) == 0b00000000):
-            mode = auto
-        elif ((value & 0b11000000) == 0b01000000):
-            mode = manual
-        elif ((value & 0b11000000) == 0b11000000):
-            mode = boost
+        if ((value & vacation.value) == 0b10000000): mode = vacation
+        elif ((value & auto.value) == 0b00000000):   mode = auto
+        elif ((value & manual.value) == 0b01000000): mode = manual
+        elif ((value & boost.value) == 0b11000000):  mode = boost
 
-        if temperature >= 30.5:
-            temperature = ON
-        elif temperature <= 4.5:
-            temperature = OFF
+        if temperature >= ON.value:    temperature = ON
+        elif temperature <= OFF.value: temperature = OFF
 
-        return byte_length, { self.name           : temperature, 
-                              self.name + '_mode' : mode}
+        if mode == auto:
+            return byte_length, { self.name           : temperature}
+        else:
+            return byte_length, { self.name           : temperature, 
+                                  self.name + '_mode' : mode}
     def encode_temp(self, values):
         value = int(values[self.name] * 2)
-        mode  = values[self.name + '_mode']
+        try:
+            mode = values[self.name + '_mode']
+        except:
+            mode = auto
 
-        if mode == vacation:
-            value |= 0b10000000
-        elif mode == auto:
-            value |= 0b00000000
-        elif mode == manual:
-            value |= 0b01000000
-        elif mode == boost:
-            value |= 0b11000000
+        if mode == vacation: value |= vacation.value
+        elif mode == auto:   value |= auto.value
+        elif mode == manual: value |= manual.value
+        elif mode == boost:  value |= boost.value
         
         return bytes([value])
 
@@ -254,7 +247,6 @@ class fflags(ffield):
         return 1, data_decoded
         
 
-
 class ffixed(ffield):
     def __init__(self, name, fixed_data):
         self.fixed_data = fixed_data
@@ -263,14 +255,14 @@ class ffixed(ffield):
             ffield.__init__(self, name, 1, type(fixed_data))
         else:
             ffield.__init__(self, name, len(fixed_data), type(fixed_data))
-    def compile(self, compiled_dict):
-        pass
     def compose(self, values):
         if isinstance(self.fixed_data, int):
             return bytes([self.fixed_data])
         else:
             return bytes(self.fixed_data)
     def decode(self, byte_data, byte_length):
+        if bytes(self.fixed_data) != byte_data:
+            print(self.name, self.fixed_data, '!=', byte_data)
         return byte_length, {self.name : self.fixed_data}
 
 
@@ -278,9 +270,6 @@ class fbase64(ffield):
     def __init__(self, *fields):
         self.fields   = fields
         self.optional = False
-    def compile(self, compiled_dict):
-        for obj in self.fields:
-            obj.compile(compiled_dict)
     def compose(self, values):
         msg = b''
         for obj in self.fields:
@@ -308,7 +297,7 @@ class fbase64(ffield):
             if len(data_decoded['unknown_base64']) == 0:
                 del(data_decoded['unknown_base64'])
 
-            return len(raw_bytes), data_decoded
+            return len(raw_bytes) - 2, data_decoded
 
 
 class fmultiple(ffield):
@@ -316,16 +305,6 @@ class fmultiple(ffield):
         self.name   = name
         self.count  = count
         self.fields = fields
-    def compile(self, compiled_dict):
-        count = 1 if self.count in (ALL, VL) else self.count
-        
-        ret_list = []
-        for i in range(0, count):
-            ret = {}
-            for obj in self.fields:
-                obj.compile(ret)
-            ret_list.append(ret)
-        compiled_dict[self.name] = ret_list
     def compose(self, values):
         if self.count == VL:
             msg = bytes([len(values[self.name])])
@@ -365,6 +344,15 @@ class fchoose(ffield):
     def __init__(self, name, decision_dict):
         self.name          = name
         self.decision_dict = decision_dict
+        self.optional      = False
+    def encode(self, values):
+        index = values[self.name]
+
+        msg = b''
+        for obj in self.decision_dict[index]:
+            msg += obj.compose(values)
+
+        return msg 
     def parse(self, raw_bytes):
         index    = self.data_already_parsed[self.name]
         obj_list = self.decision_dict[index]
@@ -384,9 +372,6 @@ class fcsv(ffield):
     def __init__(self, *fields):
         self.fields   = fields
         self.optional = False
-    def compile(self, compiled_dict):
-        for obj in self.fields:
-            obj.compile(compiled_dict)
     def compose(self, values):
         msg = b''
         for obj in self.fields:
@@ -414,12 +399,6 @@ class fcsv(ffield):
 class MessageTyp(object):
     def __init__(self):
         pass
-
-    def compile(self):
-        ret = {}
-        for obj in self.fields:
-            obj.compile(ret)
-        return ret
 
     def compose(self, values={}):
         msg = b''
