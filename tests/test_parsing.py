@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.par
 from nose import tools
 from maxcube.parsing import start
 from maxcube.constants import *
-from pprint import pprint
+from maxcube.output import display
 
 import datetime
 
@@ -169,8 +169,6 @@ def test_L_message():
 	tools.assert_equal(len(parsed)           , 1)
 	tools.assert_equal(len(parsed[0].devices), 3)
 
-	pprint(parsed[0].devices[0].__dict__)
-
 	tools.assert_equal(246         , parsed[0].devices[0].unknown)
 	tools.assert_equal(None        , parsed[0].devices[0].date_until)
 	tools.assert_equal(11          , parsed[0].devices[0].length)
@@ -218,10 +216,10 @@ def test_s_message():
 	# [0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0x80, 0x00, 0x01]
 
 	# cmds
-	#0x00		= SystemInformation
-	#0x01		= Inclusion
-	#0x02		= Answer
-	#0x03		= TimeInformation
+	#0x00		= SystemInformation # not used
+	#0x01		= Inclusion # not used
+	#0x02		= Answer # not used
+	#0x03		= TimeInformation # not used
 	#0x10		= ConfigWeekTemperatureProfile
 	#0x11		= ConfigTemperatures
 	#0x12		= ConfigValveFunctions
@@ -278,17 +276,23 @@ def test_s_message():
 	tools.assert_equal(parsed[0].destination_type      , 1)
 
 	parsed = start(b's:AAQQAAAAD8OAAQJASUxuQMtNIE0gTSBNIA==\r\n') 
-	# |               magic               |    rf adress    |room |
+	# |               magic               |    rf adress    |room | day |temp |time | day2|temp |time | day3|temp |time | day4|temp |time | day5|temp |time |
 	#  0   , 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19  , 20  , 21  , 22  , 23  , 24
 	# [0x00, 0x04, 0x10, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0x80, 0x01, 0x02, 0x40, 0x49, 0x4c, 0x6e, 0x40, 0xcb, 0x4d, 0x20, 0x4d, 0x20, 0x4d, 0x20, 0x4d, 0x20]
-	tools.assert_equal(parsed[0].msg_type   , b's:')
-	tools.assert_equal(parsed[0].rf_address , b'0fc380')
-	tools.assert_equal(parsed[0].room_id    , 1)
+	tools.assert_equal(parsed[0].msg_type              , b's:')
+	tools.assert_equal(parsed[0].rf_address            , b'0fc380')
+	tools.assert_equal(parsed[0].room_id               , 1)
+	tools.assert_equal(parsed[0].day                   , 2)
+	tools.assert_equal(parsed[0].program[0].temperature, 16)
+	tools.assert_equal(parsed[0].program[0].time       , datetime.time(6, 5))
+	tools.assert_equal(parsed[0].program[1].temperature, 19)
+	tools.assert_equal(parsed[0].program[1].time       , datetime.time(9, 10))
+	tools.assert_equal(parsed[0].program[2].temperature, 16)
+	tools.assert_equal(parsed[0].program[2].time       , datetime.time(16, 55))
 
 	parsed = start(b's:AARAAAAAD8OAAaveDiI=\r\n')
 	# |               magic               |    rf adress    |room |temp|   date     |time 
 	# [0x00, 0x04, 0x40, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0x80, 0x01, 0xab, 0xde, 0x0e, 0x22]
-	print(parsed[0].__dict__)
 	tools.assert_equal(parsed[0].msg_type   , b's:')
 	tools.assert_equal(parsed[0].rf_address , b'0fc380')
 	tools.assert_equal(parsed[0].room_id    , 1)
@@ -297,3 +301,5 @@ def test_s_message():
 	tools.assert_equal(parsed[0].date_until , datetime.date(2014, 12, 30))
 	tools.assert_equal(parsed[0].time_until , datetime.time(17, 00))
 
+if __name__ == '__main__':
+	test_s_message()

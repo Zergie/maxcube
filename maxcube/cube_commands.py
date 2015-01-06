@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from maxcube.message_fields import *
+from maxcube.fields import *
 
 import datetime
 
