@@ -29,10 +29,7 @@ import datetime
 # INCOMING_CHECK_PRODUCT_ACTIVATION = "v:"
 # INCOMING_ACTIVATE_PRODUCT = "w:"
 # INCOMING_SEND_DEVICE_CMD = "S:"
-  # example: 'S:06,0,30\r\n'
-  #          'S:03,0,2d\r\n' (response to 's:AAQQAAAAD9rtAgRASUxuQMtNIE0gTSBNIA==\r\n')
-  #          'S:03,0,2a\r\n' (response to 's:AAQQAAAAD9rtAgZASUxuQMtNIE0gTSBNIA==\r\n')
-  #          'S:04,0,2b\r\n' (response to 's:AAQQAAAAD9rtAgBASUxuQMtNIE0gTSBNIA==\r\n')
+
 
 class H_Message(MessageTyp):
     def __init__(self):
@@ -176,9 +173,9 @@ class S_Message(MessageTyp):
     def __init__(self):
         self.fields = [ffixed('msg_type', b'S:'),
                        fcsv(
-                           ffield('duty_cycle'       , ALL, int),
-                           ffield('command_discarded', ALL, int),
-                           ffield('free_memory_slots', ALL, int)
+                           ffield('duty_cycle'       , ALL, str),
+                           ffield('command_discarded', ALL, str),
+                           ffield('free_memory_slots', ALL, str)
                         ),
                        ffixed('_end', b'\r\n') ]
         MessageTyp.__init__(self)
