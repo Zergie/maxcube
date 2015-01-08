@@ -303,5 +303,36 @@ def test_s_message():
 	tools.assert_equal(parsed[0].date_until , datetime.date(2014, 12, 30))
 	tools.assert_equal(parsed[0].time_until , datetime.time(17, 00))
 
+	parsed = start(b's:AAQSAAAAD8OAATIM/wA=\r\n')
+	# |               magic               |    rf adress    | ??  |boost|decal|max |offset
+	#  0   , 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  
+	# [0x00, 0x04, 0x12, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0x80, 0x01, 0x32, 0x0c, 0xff, 0x00]
+	
+
+	parsed = start(b's:AAQSAAAAD8OAASoM/wA=\r\n')
+	tools.assert_equal(parsed[0].msg_type   , b's:')
+	tools.assert_equal(parsed[0].rf_address , b'0fc380')
+	tools.assert_equal(parsed[0].boost_time , 5)
+	tools.assert_equal(parsed[0].boost_valve, 50)
+	tools.assert_equal(parsed[0].decalcification_day , 'sat')
+	tools.assert_equal(parsed[0].decalcification_hour, datetime.time(12, 0))
+
+	parsed = start(b's:AAQSAAAAD8OAATQM/wA=\r\n') 
+	tools.assert_equal(parsed[0].msg_type   , b's:')
+	tools.assert_equal(parsed[0].rf_address , b'0fc380')
+	tools.assert_equal(parsed[0].boost_time , 5)
+	tools.assert_equal(parsed[0].boost_valve, 100)
+	tools.assert_equal(parsed[0].decalcification_day , 'sat')
+	tools.assert_equal(parsed[0].decalcification_hour, datetime.time(12, 0))
+
+	parsed = start(b's:AAQSAAAAD8OAASos/wA=\r\n')
+	tools.assert_equal(parsed[0].decalcification_day , 'sun')
+	tools.assert_equal(parsed[0].decalcification_hour, datetime.time(12, 0))
+
+	
+	display(parsed[0].__dict__)
+	tools.assert_equal(True, False)
+
+
 if __name__ == '__main__':
 	test_s_message()
