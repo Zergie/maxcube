@@ -102,7 +102,12 @@ class s_Message(MessageTyp):
                                       ffield('temperature_offset'      ,   1, temp_offset),         
                                       ffield('temperature_window_open' ,   1, temp),
                                       ffield('duration_window_open'    ,   1, int)],
-                                      0x12 : [],
+                                      0x12 : [
+                                      ffield('boost'                   ,   1, boost),
+                                      ffield('decalcification'         ,   1, decalcification),
+                                      ffield('valve_max'               ,   1, percent),
+                                      ffield('valve_offset'            ,   1, percent),
+                                      ],
                                       0x20 : [
                                       ffield('destination_rf_address',   3, bytes),
                                       ffield('destination_type'      ,   1, int)],
