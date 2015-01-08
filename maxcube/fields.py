@@ -312,7 +312,7 @@ class ffixed(ffield):
         if bytes(self.fixed_data) != byte_data:
             print(self.name, self.fixed_data, '!=', byte_data)
         return byte_length, {self.name : self.fixed_data}
-
+        
 
 class fbase64(ffield):
     def __init__(self, *fields):

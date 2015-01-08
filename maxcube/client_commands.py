@@ -109,9 +109,11 @@ class s_Message(MessageTyp):
                                       ffield('valve_offset'            ,   1, percent),
                                       ],
                                       0x20 : [
-                                      ffield('destination_rf_address',   3, bytes),
-                                      ffield('destination_type'      ,   1, int)],
-                                      0x21 : [],
+                                      ffield('partner_rf_address',   3, bytes),
+                                      ffield('partner_type'      ,   1, int)],
+                                      0x21 : [
+                                      ffield('partner_rf_address',   3, bytes),
+                                      ffield('partner_type'      ,   1, int)],
                                       0x22 : [
                                       ffield('new_room_id',   1, int)],
                                       0x23 : [],
