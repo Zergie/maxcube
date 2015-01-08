@@ -274,6 +274,7 @@ def test_s_message():
 	tools.assert_equal(parsed[0].room_id               , 0)
 	tools.assert_equal(parsed[0].destination_rf_address, b'0fdaed')
 	tools.assert_equal(parsed[0].destination_type      , 1)
+	tools.assert_equal(parsed[0].group                 , False)
 
 	parsed = start(b's:AAQQAAAAD8OAAQJASUxuQMtNIE0gTSBNIA==\r\n') 
 	# |               magic               |    rf adress    |room | day |temp |time | day2|temp |time | day3|temp |time | day4|temp |time | day5|temp |time |
@@ -289,6 +290,7 @@ def test_s_message():
 	tools.assert_equal(parsed[0].program[1].time       , datetime.time(9, 10))
 	tools.assert_equal(parsed[0].program[2].temperature, 16)
 	tools.assert_equal(parsed[0].program[2].time       , datetime.time(16, 55))
+	tools.assert_equal(parsed[0].group                 , True)
 
 	parsed = start(b's:AARAAAAAD8OAAaveDiI=\r\n')
 	# |               magic               |    rf adress    |room |temp|   date     |time 
