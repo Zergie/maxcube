@@ -272,8 +272,8 @@ def test_s_message():
 	tools.assert_equal(parsed[0].msg_type              , b's:')
 	tools.assert_equal(parsed[0].rf_address            , b'0fc373')
 	tools.assert_equal(parsed[0].room_id               , 0)
-	tools.assert_equal(parsed[0].destination_rf_address, b'0fdaed')
-	tools.assert_equal(parsed[0].destination_type      , 1)
+	tools.assert_equal(parsed[0].partner_rf_address    , b'0fdaed')
+	tools.assert_equal(parsed[0].partner_type          , 1)
 	tools.assert_equal(parsed[0].group                 , False)
 
 	parsed = start(b's:AAQQAAAAD8OAAQJASUxuQMtNIE0gTSBNIA==\r\n') 
@@ -328,10 +328,6 @@ def test_s_message():
 	parsed = start(b's:AAQSAAAAD8OAASos/wA=\r\n')
 	tools.assert_equal(parsed[0].decalcification_day , 'sun')
 	tools.assert_equal(parsed[0].decalcification_hour, datetime.time(12, 0))
-
-	
-	display(parsed[0].__dict__)
-	tools.assert_equal(True, False)
 
 
 if __name__ == '__main__':
