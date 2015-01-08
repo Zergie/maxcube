@@ -178,3 +178,12 @@ class c_Message(MessageTyp):
                        ffixed('_end'      , b'\r\n') ]    
         MessageTyp.__init__(self)
 
+class r_Message(MessageTyp):
+    def __init__(self):
+        self.fields = [ffixed('msg_type', b'r:'),
+                       fcsv(
+                           ffixed('01'        , ALL, str),
+                           ffield('rf_address', ALL, str)),
+                       ffixed('_end', b'\r\n') ]
+        MessageTyp.__init__(self)
+
