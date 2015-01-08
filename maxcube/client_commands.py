@@ -6,6 +6,9 @@ from maxcube.fields import *
 # OUTGOING_QUIT = "q:"
 # OUTGOING_GET_DEVICE_LIST = "l:"
 # OUTGOING_GET_CONFIGURATION = "c:"
+# OUTGOING_SEND_DEVICE_CMD = "s:"
+# OUTGOING_RESET_ERROR = "r:"
+# OUTGOING_RESET = "a:"
 
 # == TODO ==
 # OUTGOING_URL = "u:"
@@ -31,10 +34,6 @@ from maxcube.fields import *
 # OUTGOING_GET_USER_DATA = "O:"
 # OUTGOING_CHECK_PRODUCT_ACTIVATION = "V:"
 # OUTGOING_ACTIVATE_PRODUCT = "W:"
-# OUTGOING_SEND_DEVICE_CMD = "s:"
-# OUTGOING_RESET = "a:"
-  # example: 'a:\r\n'
-# OUTGOING_RESET_ERROR = "r:"
 # OUTGOING_DELETE_DEVICES = "t:"
 # OUTGOING_SET_PUSHBUTTON_CONFIG = "w:"
 # OUTGOING_SET_URL = "u:"
@@ -56,13 +55,17 @@ class l_Message(MessageTyp):
                        ffixed('_end'    , b'\r\n') ]
         MessageTyp.__init__(self)
 
-
 class q_Message(MessageTyp):
     def __init__(self):
         self.fields = [ffixed('msg_type', b'q:'),
                        ffixed('_end'    , b'\r\n') ]
         MessageTyp.__init__(self)
 
+class a_Message(MessageTyp):
+    def __init__(self):
+        self.fields = [ffixed('msg_type', b'a:'),
+                       ffixed('_end'    , b'\r\n') ]
+        MessageTyp.__init__(self)
 
 #class f_Message(MessageTyp):
 #    def __init__(self):
