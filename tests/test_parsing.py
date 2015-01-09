@@ -304,7 +304,7 @@ def test_s_message():
 	tools.assert_equal(parsed[0].time_until , datetime.time(17, 00))
 
 	parsed = start(b's:AAQSAAAAD8OAATIM/wA=\r\n')
-	# |               magic               |    rf adress    | ??  |boost|decal|max |offset
+	# |               magic               |    rf adress    | room|boost|decal|max |offset
 	#  0   , 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9   , 10  , 11  , 12  , 13  
 	# [0x00, 0x04, 0x12, 0x00, 0x00, 0x00, 0x0f, 0xc3, 0x80, 0x01, 0x32, 0x0c, 0xff, 0x00]
 	
