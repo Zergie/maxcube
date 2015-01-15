@@ -8,67 +8,32 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.par
 
 import datetime
 
-from maxcube.client_commands import *
-from maxcube.cube_commands import *
+from maxcube.parsing import *
 
 def test_simple():
-	composed = l_Message().compose()
+	composed = compose(l_Message)
 	tools.assert_equal(composed, b'l:\r\n')
 
-	composed = q_Message().compose()
+	composed = compose(q_Message)
 	tools.assert_equal(composed, b'q:\r\n')
 
 
 def test_c_Message():
 	values   = {'rf_address' : '0fc380'}
-	composed = c_Message().compose(values)
+	composed = compose(c_Message, values)
 	tools.assert_equal(composed, b'c:0fc380\r\n')
 
 
-#def test_s_Message():
-	# values   = {'rf_address' : b'0fc380',
-	# 			'room_id'    : 0,
-	# 			'temp'       : OFF,
-	# 			'temp_mode'  : auto,
-	# 			'type'       : 0x22,
-	# 			'unknown2'   : 0x00
-	# 			}
-	# composed = s_Message().compose(values)
-	# tools.assert_equal(composed, b's:AAAiAAAAD8OAAAE=\r\n')
-
-	# values   = {'rf_address' : b'0fc380',
-	# 			'room_id'    : 0,
-	# 			'temp'       : 21.5,
-	# 			'temp_mode'  : auto,
-	# 			'type'       : 0x11,
-	# 			'unknown2'   : 0x00,
-	# 			'unknown11'  : b'213d09071803'
-	# 			}
-	# composed = s_Message().compose(values)
-	# tools.assert_equal(composed, b's:AAARAAAAD8OAACshPQkHGAM=\r\n')
-
-	# values   = {'rf_address' : b'0fc373',
-	# 			'room_id'    : 0,
-	# 			'temp'       : 7.5,
-	# 			'temp_mode'  : auto,
-	# 			'type'       : 0x20,
-	# 			'unknown2'   : 0x00
-	# 			}
-	# composed = s_Message().compose(values)
-	# tools.assert_equal(composed, b's:AAAgAAAAD8NzAA/a7QE=\r\n')
-
-	# values   = {'rf_address' : b'0fc380',
-	# 			'room_id'    : 1,
-	# 			'temp'       : 1,
-	# 			'temp_mode'  : auto,
-	# 			'type'       : 0x10,
-	# 			'unknown2'   : 0x04,
-	# 			'unknown10'  : b'40494c6e40cb4d204d204d204d20'
-	# 			}
-	# composed = s_Message().compose(values)
-	# tools.assert_equal(composed, b's:AAQQAAAAD8OAAQJASUxuQMtNIE0gTSBNIA==\r\n')
-
-
+def test_s_Message():
+	values = {'type'               : AddLinkPartner,
+			  'msg_type'           : b's:',
+			  'rf_address'         : b'0fc373',
+			  'room_id'            : 0,
+			  'partner_rf_address' : b'0fdaed',
+			  'partner_type'       : 1,
+			  'group'              : False}
+	composed = compose(s_Message, values)
+	tools.assert_equal(composed, b's:AAAgAAAAD8NzAA/a7QE=\r\n')
 
 def test_H_Message():
 	values   = {'rf_address'         : '03f6c9',
