@@ -83,7 +83,7 @@ def test_H_Message():
 				'cube_date'          : datetime.date(2013, 12, 29),
 				'cube_time'          : datetime.time(16, 19)
 				}
-	composed = H_Message().compose(values)
+	composed = compose(H_Message, values)
 	tools.assert_equal(composed, b'H:JEQ0543545,03f6c9,0113,00000000,4f001e1b,00,32,0d0c1d,1013,03,0000\r\n')
 
 
@@ -110,7 +110,7 @@ def test_M_Message():
 				 					  'name'       : 'Eco Switch',
 				 					  'room_id'    : 0}],
 				'unknown3'        : 1}
-	composed = M_Message().compose(values)
+	composed = compose(M_Message, values)
 	tools.assert_equal(composed, b'M:00,01,VgICAg1PYnl2YWNpIHBva29qCLbSAQdQcmVkc2luCwS+AwILBL5LRVEwNTcxNjc0C3RvcGVuaSB1IHdjAQIIttJLRVEwNjM0NjA3CVBvZCBva25lbQIFAbSRSkVRMDMwNTIwNQpFY28gU3dpdGNoAAE=\r\n')
 
 

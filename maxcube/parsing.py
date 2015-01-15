@@ -2,15 +2,16 @@
 from maxcube.client_commands import *
 from maxcube.cube_commands import *
 
-def start(raw_data):
+def parse(raw_data):
     ret = []
     for line in raw_data.split(b'\r\n'):
         if len(line) > 0:
             ret.append(handle_output(line + b'\r\n'))
     return ret
 
+
 def handle_output(line):
-    #print('handle_output=', line)
+    print('\nparseing:', line)
     msg_type = chr(line[0]) + '_'
     cls = None
 
@@ -25,3 +26,8 @@ def handle_output(line):
         return message
     else:
         return None
+
+
+def compose(cls, values={}):
+    msg = cls()
+    return msg.compose(values)

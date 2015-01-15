@@ -115,6 +115,7 @@ class ffield(object):
     def decode_str(self, byte_data, byte_length):
         return byte_length, {self.name : byte_data.decode()}
     def encode_str(self, values):
+        print('1:', values, self.name)
         return str(values[self.name]).encode('utf-8')
 
     def decode_int(self, byte_data, byte_length):
@@ -278,14 +279,23 @@ class ffield(object):
 
 class fflags(ffield):
     def __init__(self, *fields):
-        self.fields = fields
+        self.fields   = fields
+        self.optional = False
+    def compose(self, values):
+        ret = 0
+
+        for name, mask, decision_dict in self.fields:
+            for key, value in decision_dict.items():
+                if value == values[name]:
+                    shift = int(log((1 + (mask ^ (mask-1))) >> 1, 2))
+                    ret |= key << shift
+                    break
+
+        return bytes([ret])
     def parse(self, raw_bytes):
         data_decoded  = {}
 
-        for i in self.fields:
-            name   = i[0]
-            mask   = i[1]
-            values = i[2]
+        for name, mask, values in self.fields:
             shift = int(log((1 + (mask ^ (mask-1))) >> 1, 2))
 
             value  = (raw_bytes[0] & mask) >> shift
@@ -299,18 +309,26 @@ class ffixed(ffield):
     def __init__(self, name, fixed_data):
         self.fixed_data = fixed_data
 
-        if isinstance(self.fixed_data, int):
+        if isinstance(fixed_data, int):
             ffield.__init__(self, name, 1, type(fixed_data))
         else:
             ffield.__init__(self, name, len(fixed_data), type(fixed_data))
+
     def compose(self, values):
         if isinstance(self.fixed_data, int):
             return bytes([self.fixed_data])
         else:
             return bytes(self.fixed_data)
+
     def decode(self, byte_data, byte_length):
-        if bytes(self.fixed_data) != byte_data:
-            print(self.name, self.fixed_data, '!=', byte_data)
+        if isinstance(self.fixed_data, int):
+            byte_compare = bytes([self.fixed_data])
+        else:
+            byte_compare = bytes(self.fixed_data)
+
+        if bytes(byte_compare) != byte_data:
+            raise ValueError('%s should be %s, but is %s' % (self.name, repr(byte_compare), repr(byte_data)))
+
         return byte_length, {self.name : self.fixed_data}
         
 
@@ -358,9 +376,11 @@ class fmultiple(ffield):
             msg = bytes([len(values[self.name])])
         else:
             msg = b''
+        
         for i in values[self.name]:
             for obj in self.fields:
                 msg += obj.compose(i)
+        
         return msg
     def parse(self, raw_bytes):
         if self.count == VL:
@@ -426,7 +446,7 @@ class fcsv(ffield):
             msg += obj.compose(values) + b','
         return msg[:-1]
     def parse(self, raw_bytes):
-        parts   = raw_bytes.split(b',')
+        parts   = raw_bytes[:-2].split(b',')
         
         if self.optional and len(parts) <= 1:
             return 0, {}

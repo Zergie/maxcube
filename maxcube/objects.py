@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from maxcube import network
-from maxcube import parsing
 from maxcube import output
-from maxcube.cube_commands import *
+from maxcube.parsing import *
 
 import socket
+
 
 class MaxCube(object):
 	type_code = 0
@@ -13,41 +12,39 @@ class MaxCube(object):
 	def __init__(self, host, port):
 		self.host = host
 		self.port = port
-		self.sock = None
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		self.rf_address       = None
 		self.serial           = None
 		self.firmware_version = None
 
-		self.devices              = {}
-		self.rooms                = {}
-		self.radiator_thermostats = []
-		self.wall_thermostats     = []
-		self.shutter_contacts     = []
-		self.eco_buttons          = []
+		self.devices              = DeviceDict()
+		self.rooms                = DeviceDict()
+		self.radiator_thermostats = DeviceList()
+		self.wall_thermostats     = DeviceList()
+		self.shutter_contacts     = DeviceList()
+		self.eco_buttons          = DeviceList()
+
+	def __repr__(self):
+		info  = '< MaxCube \n'
+		for key, value in self.__dict__.items():
+			info += '%s = %s\n' % (key, repr(value))
+		info += '>\n'
+
+		return info
 
 	def connect(self):
-		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print('connecting to', self.host, self.port)
 		self.sock.connect((self.host, self.port))
-		
+		print('connected')
+
 		raw_data = b''
 		while 1:
 			buf = self.sock.recv(8192)
 			raw_data += buf
-			if buf[0:2] == b'L:': break
-			
-		self._setup(raw_data)
-
-	def close(self):
-		self.sock.close()
-
-	def status(self):
-		self.sock.send(b'l:\r\n')
-		raw_data = self.sock.recv(8192)
-		return parsing.handle_output(raw_data)[1]
-
-	def _setup(self, raw_data):
-		for msg in parsing.start(raw_data):
+			if b'L:' in buf: break
+		
+		for msg in parse(raw_data):
 			if isinstance(msg, H_Message):
 				self.rf_address       = msg.rf_address
 				self.serial           = msg.serial
@@ -89,6 +86,15 @@ class MaxCube(object):
 				if msg.type != 0:
 					self.devices[msg.rf_address]._add_configuration(msg)
 
+	def close(self):
+		self.sock.close()
+
+	def status(self):
+		self.sock.send(b'l:\r\n') # todo
+		raw_data = self.sock.recv(8192)
+		return parsing.handle_output(raw_data)[1]
+
+
 
 class Room(object):
 	def __init__(self, cube, id, rf_address, name):
@@ -102,6 +108,23 @@ class Room(object):
 		self.devices.append(device)
 
 
+class DeviceDict(dict):	
+	def __init__(self):
+		dict.__init__(self)
+	def __repr__(self):
+		return '<DeviceDict devices=%s>' % repr(dict(self))
+	def delete(self, force=False):
+		devices = DeviceList(self.values())
+		devices.delete(force)
+
+class DeviceList(list):
+	def __init__(self):
+		list.__init__(self)
+	def __repr__(self):
+		return '<DeviceList devices=%s>' % repr(list(self))
+	def delete(self, force=False):
+		devices = [{'rf_address' : i.rf_address} for i in self]
+		print(compose(t_Message, {'force' : force, 'devices': devices}))
 
 class Device(object):
 	def __init__(self, cube, data):
@@ -110,6 +133,8 @@ class Device(object):
 		self.serial     = data.serial
 		self.room_id    = data.room_id
 		self.name 	    = data.name
+	def __repr__(self):
+		return '<%s name=%s, rf_address=%s, serial=%s>' % (self.__class__.__name__, repr(self.name), repr(self.rf_address), repr(self.serial))
 
 	def _add_configuration(self, data):
 		self.raw_data = data
@@ -118,6 +143,10 @@ class Device(object):
 		status = self.cube.status()
 		return status[self.rf_address]
 
+	def delete(self, force=False):
+		print(compose(t_Message, {'force' : force, 'devices': [{'rf_address' : self.rf_address}]}))
+
+	
 
 class RadiatorThermostat(Device):
 	type_code = 1
@@ -139,10 +168,10 @@ class RadiatorThermostat(Device):
 	def set_temp_auto(self):
 		pass
 
-
-
 class RadiatorThermostatPlus(RadiatorThermostat):
 	type_code = 2
+
+
 class WallThermostat(Device):
 	type_code = 3
 class ShutterContact(Device):
