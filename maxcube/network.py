@@ -31,11 +31,12 @@ def write_raw_data(host, port, data):
 
 
 def discover_cubes(limit=99, serial="**********"):
-    HelloMessage =  b'eQ3Max*\x00' + serial.encode('ascii') + b'I';
+    HelloMessage =  b'eQ3Max*\x00' + serial.encode('ascii') + b'I'
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
     sock.bind(('', 23272))
     sock.sendto(HelloMessage, ('224.0.0.1', 23272))
+    udp_answer = None
 
     while limit > 0:
         while True: 
@@ -56,8 +57,10 @@ def discover_cubes(limit=99, serial="**********"):
         
         if limit == 0:
             sock.close()
-        
-        if udp_answer['fw_version'] < 109:
+
+        if udp_answer is not None:
+            yield None, None
+        elif udp_answer['fw_version'] < 109:
             yield addr[0], 80
         else:
             yield addr[0], 62910

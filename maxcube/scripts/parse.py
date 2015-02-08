@@ -17,10 +17,10 @@ from maxcube import output
 def main():
 
 	print('parsing ', repr(sys.argv[1]))
-	message = parsing.start(bytes(sys.argv[1], "utf-8"))
+	message = parsing.parse(bytes(sys.argv[1], "utf-8"))
 	output.display(message[0])
 
-	if message[0] == None:
+	if message[0] is None:
 		f = open('log.txt', 'a')
 	#	f.write(repr(sys.argv[1]) + '\n')
 		f.close()

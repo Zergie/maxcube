@@ -30,10 +30,10 @@ def optional(field):
 
 
 class ffield(object): 
-    def __init__(self, name, length, type):
+    def __init__(self, name, length, ftype):
         self.name     = name
         self.length   = length
-        self.type     = type
+        self.type     = ftype
         self.optional = False
 
         decode_old, encode_old = (None, None)
@@ -67,13 +67,13 @@ class ffield(object):
         elif self.type is decalcification:
             self.decode, self.encode = (self.decode_decalcification, self.encode_decalcification)
 
-        if decode_old != None: self.decode = decode_old
-        if encode_old != None: self.encode = encode_old
+        if decode_old is not None: self.decode = decode_old
+        if encode_old is not None: self.encode = encode_old
 
     def compose(self, values):
         if self.optional and not self.name in values:
             return b''
-        elif self.optional and values[self.name] == None:
+        elif self.optional and values[self.name] is None:
             return b''
         else:
             msg = self.encode(values)
@@ -238,7 +238,7 @@ class ffield(object):
         return byte_length, {self.name + '_time'  : time,
                              self.name + '_valve' : valve}
     def encode_boost(self, values):
-        valve = values[self.name + '_valve'] * (20 / 100)
+        value = values[self.name + '_valve'] * (20 / 100)
         value |= ((values[self.name + '_time'] / 5) << 5)
         return bytes([value])
 
@@ -249,7 +249,7 @@ class ffield(object):
         return byte_length, {self.name + '_day'  : ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'][day],
                              self.name + '_hour' : datetime.time(hour, 0)}
     def encode_decalcification(self, values):
-        valve = 0x00
+        value = 0x00
         return bytes([value])
         
 

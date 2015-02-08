@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 from nose import tools
 
-import os.path
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'maxcube'))
-
-import datetime
-
 from maxcube.parsing import *
 
 def test_simple():
@@ -77,5 +70,3 @@ def test_M_Message():
 				'unknown3'        : 1}
 	composed = compose(M_Message, values)
 	tools.assert_equal(composed, b'M:00,01,VgICAg1PYnl2YWNpIHBva29qCLbSAQdQcmVkc2luCwS+AwILBL5LRVEwNTcxNjc0C3RvcGVuaSB1IHdjAQIIttJLRVEwNjM0NjA3CVBvZCBva25lbQIFAbSRSkVRMDMwNTIwNQpFY28gU3dpdGNoAAE=\r\n')
-
-

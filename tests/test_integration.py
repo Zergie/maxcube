@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-from nose import tools
-
 import os.path
 import sys
+
+from nose import tools
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'maxcube'))
 
 from maxcube import objects
-from maxcube import parsing
 
 from test_parsing import RAW_DATA
 from pprint import pprint
@@ -30,9 +29,9 @@ class DummyMaxCube(threading.Thread):
 		conn, addr = s.accept()
 
 		try:
-			while self.stop == False:
+			while not self.stop:
 				# send
-				if self.stop == False:
+				if not self.stop:
 					data = self.data[self.index]
 					self.index += 1
 					for sent in data.split():
@@ -42,7 +41,7 @@ class DummyMaxCube(threading.Thread):
 
 				# recv
 				got = b''
-				while self.stop == False:
+				while not self.stop:
 					got = conn.recv(8192)
 					if got.endswith('\r\n'):
 						break
